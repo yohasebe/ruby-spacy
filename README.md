@@ -200,7 +200,7 @@ end
 
 **Output**
 
-![](./../examples/get_started/outputs/test_dep.svg)
+![](https://raw.githubusercontent.com/yohasebe/ruby-spacy/f6905843e9b156f19e52dbd6b775f52d5e32686b/examples/get_started/outputs/test_dep.svg?token=AAAEOH27AZKCLKCYC7O23ALA2MWNO)
 
 
 **Dependency Visualization Example**
@@ -222,7 +222,7 @@ end
 
 **Output**
 
-![](./../examples/get_started/outputs/test_dep_compact.svg)
+![](https://raw.githubusercontent.com/yohasebe/ruby-spacy/f6905843e9b156f19e52dbd6b775f52d5e32686b/examples/get_started/outputs/test_dep_compact.svg?token=AAAEOH6FPNCO7PRYKB5BJVDA2MWSI)
 
 ### Named Entities 
 
@@ -255,37 +255,6 @@ puts table
 | Apple      | 0          | 5        | ORG   |
 | U.K.       | 27         | 31       | GPE   |
 | $1 billion | 44         | 54       | MONEY |
-
-**Named Entity Visualization Example**
-
-```ruby
-require "ruby-spacy"
-
-nlp = Spacy::Language.new("en_core_web_sm")
-
-sentence ="When Sebastian Thrun started working on self-driving cars at Google in 2007, few people outside of the company took him seriously." 
-doc = nlp.read(sentence)
-
-ent_html = doc.displacy(style: 'ent')
-
-File.open(File.join(File.dirname(__FILE__), "test_ent.html"), "w") do |file|
-  file.write(ent_html)
-end
-```
-
-**Output**
-
-<div class="entities" style="line-height: 2.5; direction: ltr">When 
-<mark class="entity" style="background: #aa9cfc; padding: 0.45em 0.6em; margin: 0 0.25em; line-height: 1; border-radius: 0.35em;">
-    Sebastian Thrun
-    <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; vertical-align: middle; margin-left: 0.5rem">PERSON</span>
-</mark>
- started working on self-driving cars at Google in 
-<mark class="entity" style="background: #bfe1d9; padding: 0.45em 0.6em; margin: 0 0.25em; line-height: 1; border-radius: 0.35em;">
-    2007
-    <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; vertical-align: middle; margin-left: 0.5rem">DATE</span>
-</mark>
-, few people outside of the company took him seriously.</div>
 
 **Named Entity Example (Japanese)**
 
