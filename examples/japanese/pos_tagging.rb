@@ -1,8 +1,8 @@
-require("./lib/ruby-spacy")
-require 'terminal-table'
+require( "ruby-spacy")
+require "terminal-table"
 
 nlp = Spacy::Language.new("ja_core_news_lg")
-doc = nlp.read("アップルはイギリスの新興企業を10億ドルで買収しようとしている。")
+doc = nlp.read("任天堂は1983年にファミコンを14,800円で発売した。")
 
 headings = ["text", "lemma", "pos", "tag", "dep", "shape", "is_alpha", "is_stop"]
 rows = []

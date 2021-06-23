@@ -242,4 +242,30 @@ class SpacyTest < Minitest::Test
     assert_equal span.label_, "US_PRESIDENT"
   end
 
+  def test_
+    text = []
+    buffer = []
+    f = File.open(File.dirname(__FILE__) + "/gulliver.txt", "r")
+    while line = f.gets
+      data = line.strip
+      if data == "" && !buffer.empty?
+        text << buffer.join(" ")
+        buffer.clear
+      else
+        buffer << data
+      end
+    end
+    text << buffer.join(" ") unless buffer.empty?
+    f.close
+    puts "Num of paragraphs: #{text.size}" 
+
+    results = {num_sentences: 0}
+    text.each_with_index do |para, index|
+      doc = @nlp.read(para)
+      num_sents = doc.sents.size
+      results[:num_sentences] += num_sents 
+      puts "Processing para ##{index}: #{num_sents} sentences"
+      pp doc.ents
+    end
+  end
 end

@@ -1,5 +1,4 @@
-require("./lib/ruby-spacy")
-require 'terminal-table'
+require "ruby-spacy"
 
 nlp = Spacy::Language.new("en_core_web_lg")
 doc1 = nlp.read("I like salty fries and hamburgers.")

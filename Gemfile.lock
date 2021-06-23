@@ -2,6 +2,8 @@ PATH
   remote: .
   specs:
     ruby-spacy (0.1.0)
+      pycall (~> 1.4.0)
+      terminal-table
 
 GEM
   remote: https://rubygems.org/
@@ -12,7 +14,6 @@ GEM
     terminal-table (3.0.1)
       unicode-display_width (>= 1.1.1, < 3)
     unicode-display_width (2.0.0)
-    warning (1.2.0)
 
 PLATFORMS
   x86_64-darwin-20
@@ -23,7 +24,6 @@ DEPENDENCIES
   rake (~> 13.0)
   ruby-spacy!
   terminal-table
-  warning
 
 BUNDLED WITH
    2.2.11

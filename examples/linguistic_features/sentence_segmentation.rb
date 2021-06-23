@@ -1,4 +1,4 @@
-require("./lib/ruby-spacy")
+require( "ruby-spacy")
 
 nlp = Spacy::Language.new("en_core_web_sm")
 

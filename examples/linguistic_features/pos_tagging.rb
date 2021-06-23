@@ -1,5 +1,5 @@
-require("./lib/ruby-spacy")
-require 'terminal-table'
+require( "ruby-spacy")
+require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("Apple is looking at buying U.K. startup for $1 billion")

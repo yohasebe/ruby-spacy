@@ -87,7 +87,7 @@ module Spacy
     end
 
     def as_doc
-      Spacy::Doc.new(@doc.spacy_nlp_id, @text)
+      Spacy::Doc.new(@doc.spacy_nlp_id, self.text)
     end
 
     def conjuncts
@@ -201,7 +201,8 @@ module Spacy
       @text = text
       @spacy_nlp_id = nlp_id
       @spacy_doc_id = "doc_#{text.object_id}"
-      PyCall.exec(%Q[text_#{text.object_id} = """#{text}"""])
+      quoted = text.gsub('"', '\"')
+      PyCall.exec(%Q[text_#{text.object_id} = """#{quoted}"""])
       PyCall.exec("#{@spacy_doc_id} = #{nlp_id}(text_#{text.object_id})")
       @py_doc = PyCall.eval(@spacy_doc_id)
     end
@@ -297,7 +298,7 @@ PY
       PyCall.eval("#{@spacy_doc_id}.similarity(#{py_doc.spacy_doc_id})")
     end
 
-    def displacy(style, compact = nil)
+    def displacy(style: "dep", compact: false)
       PyCall.eval("displacy.render(#{@spacy_doc_id}, style='#{style}', options={'compact': #{compact.to_s.capitalize}}, jupyter=False)")
     end
 

@@ -1,13 +1,12 @@
-require("./lib/ruby-spacy")
-require 'terminal-table'
+require "ruby-spacy"
 
 nlp = Spacy::Language.new("en_core_web_sm")
 
 sentence = "Autonomous cars shift insurance liability toward manufacturers"
 doc = nlp.read(sentence)
 
-dep_svg = doc.displacy('dep', false)
+dep_svg = doc.displacy(style: "dep", compact: true)
 
-File.open(File.join(File.dirname(__FILE__), "outputs/test_dep.svg"), "w") do |file|
+File.open(File.join("test_dep_compact.svg"), "w") do |file|
   file.write(dep_svg)
 end
