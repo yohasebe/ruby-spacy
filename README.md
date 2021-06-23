@@ -205,7 +205,7 @@ end
 
 **Output**
 
-![](https://raw.githubusercontent.com/yohasebe/ruby-spacy/f6905843e9b156f19e52dbd6b775f52d5e32686b/examples/get_started/outputs/test_dep.svg?token=AAAEOH27AZKCLKCYC7O23ALA2MWNO)
+![](https://github.com/yohasebe/ruby-spacy/blob/main/examples/get_started/outputs/test_dep.svg)
 
 
 **Dependency Visualization Example**
@@ -227,7 +227,7 @@ end
 
 **Output**
 
-![](https://raw.githubusercontent.com/yohasebe/ruby-spacy/f6905843e9b156f19e52dbd6b775f52d5e32686b/examples/get_started/outputs/test_dep_compact.svg?token=AAAEOH6FPNCO7PRYKB5BJVDA2MWSI)
+![](https://github.com/yohasebe/ruby-spacy/blob/main/examples/get_started/outputs/test_dep_compact.svg)
 
 ### Named Entities 
 
