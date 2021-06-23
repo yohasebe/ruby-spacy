@@ -30,10 +30,15 @@ Then, you can install [spaCy](https://spacy.io/) in any way you like. For exampl
 $ pip install spacy
 ```
 
-Then install trained models/pipelines. For a starter, `en_core_web_sm` is useful to process text in English. (If you use word vector functionalites of spaCy, install `en_core_web_sm`, `en_core_web_lg` or `en_core_web_trf` instead.)
+Then install trained models/pipelines. For a starter, `en_core_web_sm` is useful to process text in English. (If you use word vector functionalites of spaCy, also install `en_core_web_lg`)
 
 ```shell
 $ python -m spacy download en_core_web_sm
+```
+See [Spacy: Models & Languages](https://spacy.io/usage/models) for models in other languages. To install a large model for the Japanese language, for instance, download the package as follows:
+
+```shell
+$ python -m spacy download ja_core_news_lg
 ```
 
 ----
