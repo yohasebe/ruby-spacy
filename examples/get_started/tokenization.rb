@@ -5,13 +5,13 @@ nlp = Spacy::Language.new("en_core_web_sm")
 
 doc = nlp.read("Apple is looking at buying U.K. startup for $1 billion")
 
-headings = ["text"]
-rows = []
+headings = [1,2,3,4,5,6,7,8,9,10,11]
+row = []
 
 doc.each do |token|
-  rows << [token.text]
+  row << token.text
 end
 
-table = Terminal::Table.new rows: rows, headings: headings
+table = Terminal::Table.new rows: [row], headings: headings
 
 puts table

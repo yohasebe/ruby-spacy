@@ -80,36 +80,23 @@ nlp = Spacy::Language.new("en_core_web_sm")
 
 doc = nlp.read("Apple is looking at buying U.K. startup for $1 billion")
 
-headings = ["text"]
-rows = []
+headings = [1,2,3,4,5,6,7,8,9,10]
+row = []
 
 doc.each do |token|
-  rows << [token.text]
+  row << token.text
 end
 
-table = Terminal::Table.new rows: rows, headings: headings
+table = Terminal::Table.new rows: [row], headings: headings
+
 puts table
 ```
 
 **Output**
 
-```text
-+---------+
-| text    |
-+---------+
-| Apple   |
-| is      |
-| looking |
-| at      |
-| buying  |
-| U.K.    |
-| startup |
-| for     |
-| $       |
-| 1       |
-| billion |
-+---------+
-```
+| 1     | 2  | 3       | 4  | 5      | 6    | 7       | 8   | 9 | 10 | 11      |
+|:-----:|:--:|:-------:|:--:|:------:|:----:|:-------:|:---:|:-:|:--:|:-------:|
+| Apple | is | looking | at | buying | U.K. | startup | for | $ | 1  | billion |
 
 ### Part-of-speech Tags and Dependencies
 
@@ -137,10 +124,8 @@ puts table
 
 **Output**
 
-```text
-+---------+---------+-------+-----+----------+-------+----------+---------+
 | text    | lemma   | pos   | tag | dep      | shape | is_alpha | is_stop |
-+---------+---------+-------+-----+----------+-------+----------+---------+
+|:--------|:--------|:------|:----|:---------|:------|:---------|:--------|
 | Apple   | Apple   | PROPN | NNP | nsubj    | Xxxxx | true     | false   |
 | is      | be      | AUX   | VBZ | aux      | xx    | true     | true    |
 | looking | look    | VERB  | VBG | ROOT     | xxxx  | true     | false   |
@@ -152,8 +137,6 @@ puts table
 | $       | $       | SYM   | $   | quantmod | $     | false    | false   |
 | 1       | 1       | NUM   | CD  | compound | d     | false    | false   |
 | billion | billion | NUM   | CD  | pobj     | xxxx  | true     | false   |
-+---------+---------+-------+-----+----------+-------+----------+---------+
-```
 
 **POS Example (Japanese)**
 
@@ -177,10 +160,8 @@ puts table
 
 **Output**
 
-```text
-+------------+------------+-------+--------------------------+--------+--------+----------+---------+
 | text       | lemma      | pos   | tag                      | dep    | shape  | is_alpha | is_stop |
-+------------+------------+-------+--------------------------+--------+--------+----------+---------+
+|:-----------|:-----------|:------|:-------------------------|:-------|:-------|:---------|:--------|
 | 任天堂     | 任天堂     | PROPN | 名詞-固有名詞-一般       | nsubj  | xxx    | true     | false   |
 | は         | は         | ADP   | 助詞-係助詞              | case   | x      | true     | true    |
 | 1983       | 1983       | NUM   | 名詞-数詞                | nummod | dddd   | false    | false   |
@@ -195,8 +176,6 @@ puts table
 | し         | する       | AUX   | 動詞-非自立可能          | aux    | x      | true     | true    |
 | た         | た         | AUX   | 助動詞                   | aux    | x      | true     | true    |
 | 。         | 。         | PUNCT | 補助記号-句点            | punct  | 。     | false    | false   |
-+------------+------------+-------+--------------------------+--------+--------+----------+---------+```
-```
 
 ### Visualizing Dependency
 
@@ -271,15 +250,11 @@ puts table
 
 **Output**
 
-```text
-+------------+------------+----------+-------+
 | text       | start_char | end_char | label |
-+------------+------------+----------+-------+
+|:-----------|-----------:|---------:|:------|
 | Apple      | 0          | 5        | ORG   |
 | U.K.       | 27         | 31       | GPE   |
 | $1 billion | 44         | 54       | MONEY |
-+------------+------------+----------+-------+
-```
 
 **Named Entity Visualization Example**
 
@@ -336,16 +311,12 @@ print table
 
 **Output**
 
-```text
-+------------+-------+-----+---------+
 | text       | start | end | label   |
-+------------+-------+-----+---------+
+|:-----------|------:|----:|:--------|
 | 任天堂     | 0     | 3   | ORG     |
 | 1983年     | 4     | 9   | DATE    |
 | ファミコン | 10    | 15  | PRODUCT |
 | 14,800円   | 16    | 23  | MONEY   |
-+------------+-------+-----+---------+
-```
 
 ### Word Vectors and Similarity
 
@@ -378,16 +349,12 @@ puts table
 ```
 **Output**
 
-```text
-+---------+------------+-------------+--------+
 | text    | has_vector | vector_norm | is_oov |
-+---------+------------+-------------+--------+
+|:--------|:-----------|:------------|:-------|
 | dog     | true       | 7.0336733   | false  |
 | cat     | true       | 6.6808186   | false  |
 | banana  | true       | 6.700014    | false  |
 | afskfsd | false      | 0.0         | true   |
-+---------+------------+-------------+--------+
-```
 
 **Similarity Example**
 
