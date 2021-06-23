@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Yoichiro Hasebe"]
   spec.email         = ["yohasebe@gmail.com"]
 
-  spec.summary       = "An wrapper module for using spaCy natural language processing library from the Ruby programming language using PyCall"
-  spec.description   = "An wrapper module for using [spaCy](https://spacy.io/) natural language processing library from the Ruby programming language using PyCall"
+  spec.summary       = "A wrapper module for using spaCy natural language processing library from the Ruby programming language using PyCall"
+  spec.description   = "A wrapper module for using [spaCy](https://spacy.io/) natural language processing library from the Ruby programming language using PyCall"
   spec.homepage      = "https://github.com/yohasebe/ruby-spacy"
   spec.license       = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.4.0")

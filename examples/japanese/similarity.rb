@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 
 nlp = Spacy::Language.new("ja_core_news_lg")
 ja_doc1 = nlp.read("今日は雨ばっかり降って、嫌な天気ですね。")

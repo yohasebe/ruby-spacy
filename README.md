@@ -1,6 +1,6 @@
 # ruby-spacy
 
-An wrapper module for using [spaCy](https://spacy.io/) natural language processing library from the Ruby programming language using PyCall
+A wrapper module for using [spaCy](https://spacy.io/) natural language processing library from the Ruby programming language using PyCall
 
 ----
 
@@ -350,7 +350,7 @@ Similarity: 0.7687607012190486
 **Similarity Example (Japanese)**
 
 ```ruby
-require( "ruby-spacy")
+require "ruby-spacy"
 
 nlp = Spacy::Language.new("ja_core_news_lg")
 ja_doc1 = nlp.read("今日は雨ばっかり降って、嫌な天気ですね。")
