@@ -85,13 +85,13 @@ nlp = Spacy::Language.new("en_core_web_sm")
 
 doc = nlp.read("Apple is looking at buying U.K. startup for $1 billion")
 
-headings = [1,2,3,4,5,6,7,8,9,10]
 row = []
 
 doc.each do |token|
   row << token.text
 end
 
+headings = [1,2,3,4,5,6,7,8,9,10]
 table = Terminal::Table.new rows: [row], headings: headings
 
 puts table
@@ -116,13 +116,13 @@ require "terminal-table"
 nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("Apple is looking at buying U.K. startup for $1 billion")
 
-headings = ["text", "lemma", "pos", "tag", "dep", "shape", "is_alpha", "is_stop"]
 rows = []
 
 doc.each do |token|
   rows << [token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop]
 end
 
+headings = ["text", "lemma", "pos", "tag", "dep", "shape", "is_alpha", "is_stop"]
 table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
@@ -152,13 +152,13 @@ require "terminal-table"
 nlp = Spacy::Language.new("ja_core_news_lg")
 doc = nlp.read("任天堂は1983年にファミリー・コンピュータを14,800円で発売した。")
 
-headings = ["text", "lemma", "pos", "tag", "dep", "shape", "is_alpha", "is_stop"]
 rows = []
 
 doc.each do |token|
   rows << [token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop]
 end
 
+headings = ["text", "lemma", "pos", "tag", "dep", "shape", "is_alpha", "is_stop"]
 table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
@@ -242,13 +242,13 @@ require "terminal-table"
 nlp = Spacy::Language.new("en_core_web_sm")
 doc =nlp.read("Apple is looking at buying U.K. startup for $1 billion")
 
-headings = ["text", "start_char", "end_char", "label"]
 rows = []
 
 doc.ents.each do |ent|
   rows << [ent.text, ent.start_char, ent.end_char, ent.label_]
 end
 
+headings = ["text", "start_char", "end_char", "label"]
 table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
@@ -272,13 +272,13 @@ nlp = Spacy::Language.new("ja_core_news_lg")
 sentence = "任天堂は1983年にファミコンを14,800円で発売した。"
 doc = nlp.read(sentence)
 
-headings = ["text", "start", "end", "label"]
 rows = []
 
 doc.ents.each do |ent|
   rows << [ent.text, ent.start_char, ent.end_char, ent.label_]
 end
 
+headings = ["text", "start", "end", "label"]
 table = Terminal::Table.new rows: rows, headings: headings
 print table
 ```
@@ -311,13 +311,13 @@ require "terminal-table"
 nlp = Spacy::Language.new("en_core_web_lg")
 doc = nlp.read("dog cat banana afskfsd")
 
-headings = ["text", "has_vector", "vector_norm", "is_oov"]
 rows = []
 
 doc.each do |token|
   rows << [token.text, token.has_vector, token.vector_norm, token.is_oov]
 end
 
+headings = ["text", "has_vector", "vector_norm", "is_oov"]
 table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
@@ -387,7 +387,6 @@ france = nlp.get_lexeme("France")
 
 query = tokyo.vector - japan.vector + france.vector
 
-headings = ["key", "text", "score"]
 rows = []
 
 results = nlp.most_similar(query, 10)
@@ -395,6 +394,7 @@ results.each do |lexeme|
   rows << [lexeme[:key], lexeme[:text], lexeme[:score],]
 end
 
+headings = ["key", "text", "score"]
 table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
@@ -429,7 +429,6 @@ france = nlp.get_lexeme("フランス")
 
 query = tokyo.vector - japan.vector + france.vector
 
-headings = ["key", "text", "score"]
 rows = []
 
 results = nlp.most_similar(query, 10)
@@ -437,6 +436,7 @@ results.each do |lexeme|
   rows << [lexeme[:key], lexeme[:text], lexeme[:score],]
 end
 
+headings = ["key", "text", "score"]
 table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
