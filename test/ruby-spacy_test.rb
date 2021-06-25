@@ -150,7 +150,6 @@ class SpacyTest < Minitest::Test
     france = nlp.get_lexeme("France")
     query = tokyo.vector - japan.vector + france.vector
     result = nlp.most_similar(query, 10)
-    pp result
     assert result.collect{|r|r[:text]}.index("Paris")
   end
 
