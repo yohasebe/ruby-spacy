@@ -106,6 +106,7 @@ puts table
 ### Part-of-speech Tags and Dependencies
 
 → [spaCy 101](https://spacy.io/usage/spacy-101#annotations-pos-deps)
+→ [POS and Morphology Tags](https://github.com/explosion/spaCy/blob/master/spacy/glossary.py)
 
 **POS Example**
 
@@ -375,6 +376,8 @@ Similarity: 0.8684192637149641
 
 **Word Vector Calculation Example**
 
+Tokyo - Japan + France = Paris ?
+
 ```ruby
 require "ruby-spacy"
 require "terminal-table"
@@ -416,6 +419,8 @@ puts table
 
 
 **Word Vector Calculation Example (Japanese)**
+
+東京 - 日本 + フランス = パリ ?
 
 ```ruby
 require "ruby-spacy"
