@@ -73,7 +73,7 @@ The following are basically Python to Ruby translations of examples from [spaCy 
 
 ### Tokenization
 
-→ [spaCy 101](https://spacy.io/usage/spacy-101#annotations-token)
+- → [spaCy 101](https://spacy.io/usage/spacy-101#annotations-token)
 
 **Tokenization Example**
 
@@ -105,8 +105,8 @@ puts table
 
 ### Part-of-speech Tags and Dependencies
 
-→ [spaCy 101](https://spacy.io/usage/spacy-101#annotations-pos-deps)
-→ [POS and Morphology Tags](https://github.com/explosion/spaCy/blob/master/spacy/glossary.py)
+- → [spaCy 101](https://spacy.io/usage/spacy-101#annotations-pos-deps)
+- → [POS and Morphology Tags](https://github.com/explosion/spaCy/blob/master/spacy/glossary.py)
 
 **POS Example**
 
@@ -185,7 +185,7 @@ puts table
 
 ### Visualizing Dependency
 
-→ [spaCy Visualizers](https://spacy.io/usage/visualizers)
+- → [spaCy Visualizers](https://spacy.io/usage/visualizers)
 
 **Dependency Visualization Example**
 
@@ -232,7 +232,7 @@ end
 
 ### Named Entities 
 
-→ [spaCy 101](https://spacy.io/usage/spacy-101#annotations-ner)
+- → [spaCy 101](https://spacy.io/usage/spacy-101#annotations-ner)
 
 **Named Entities Example**
 
@@ -295,7 +295,7 @@ print table
 
 ### Word Vectors and Similarity
 
-→ [spaCy 101](https://spacy.io/usage/spacy-101#vectors-similarity)
+- → [spaCy 101](https://spacy.io/usage/spacy-101#vectors-similarity)
 
 These functionalities need a larger pipeline package than the one that ends in `sm`:
 
