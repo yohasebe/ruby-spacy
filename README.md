@@ -186,7 +186,7 @@ puts table
 
 → [spaCy Visualizers](https://spacy.io/usage/visualizers)
 
-**Dependency Example**
+**Dependency Visualization Example**
 
 ```ruby
 require "ruby-spacy"
@@ -208,7 +208,7 @@ end
 ![](https://github.com/yohasebe/ruby-spacy/blob/main/examples/get_started/outputs/test_dep.svg)
 
 
-**Dependency Visualization Example**
+**Dependency Visualization Example (Compact)**
 
 ```ruby
 require "ruby-spacy"
