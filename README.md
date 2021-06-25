@@ -375,7 +375,7 @@ Similarity: 0.8684192637149641
 
 **Word Vector Example**
 
-```ruby```
+```ruby
 require "ruby-spacy"
 require "terminal-table"
 
