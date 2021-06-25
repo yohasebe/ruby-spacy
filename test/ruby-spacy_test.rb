@@ -137,6 +137,23 @@ class SpacyTest < Minitest::Test
     assert_empty ["senter"] - @nlp.disabled
   end
 
+  def test_get_lexeme
+    nlp = Spacy::Language.new
+    king = nlp.get_lexeme("king")
+    assert_equal king.text, "king"
+  end
+
+  def test_most_similar
+    nlp = Spacy::Language.new("en_core_web_lg")
+    tokyo = nlp.get_lexeme("Tokyo")
+    japan = nlp.get_lexeme("Japan")
+    france = nlp.get_lexeme("France")
+    query = tokyo.vector - japan.vector + france.vector
+    result = nlp.most_similar(query, 10)
+    pp result
+    assert result.collect{|r|r[:text]}.index("Paris")
+  end
+
   # ============================
   # Span related methods
   # ============================
@@ -242,30 +259,30 @@ class SpacyTest < Minitest::Test
     assert_equal span.label_, "US_PRESIDENT"
   end
 
-  def test_
-    text = []
-    buffer = []
-    f = File.open(File.dirname(__FILE__) + "/gulliver.txt", "r")
-    while line = f.gets
-      data = line.strip
-      if data == "" && !buffer.empty?
-        text << buffer.join(" ")
-        buffer.clear
-      else
-        buffer << data
-      end
-    end
-    text << buffer.join(" ") unless buffer.empty?
-    f.close
-    puts "Num of paragraphs: #{text.size}" 
+  # def test_
+  #   text = []
+  #   buffer = []
+  #   f = File.open(File.dirname(__FILE__) + "/gulliver.txt", "r")
+  #   while line = f.gets
+  #     data = line.strip
+  #     if data == "" && !buffer.empty?
+  #       text << buffer.join(" ")
+  #       buffer.clear
+  #     else
+  #       buffer << data
+  #     end
+  #   end
+  #   text << buffer.join(" ") unless buffer.empty?
+  #   f.close
+  #   puts "Num of paragraphs: #{text.size}" 
 
-    results = {num_sentences: 0}
-    text.each_with_index do |para, index|
-      doc = @nlp.read(para)
-      num_sents = doc.sents.size
-      results[:num_sentences] += num_sents 
-      puts "Processing para ##{index}: #{num_sents} sentences"
-      pp doc.ents
-    end
-  end
+  #   results = {num_sentences: 0}
+  #   text.each_with_index do |para, index|
+  #     doc = @nlp.read(para)
+  #     num_sents = doc.sents.size
+  #     results[:num_sentences] += num_sents 
+  #     puts "Processing para ##{index}: #{num_sents} sentences"
+  #     pp doc.ents
+  #   end
+  # end
 end

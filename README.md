@@ -9,19 +9,19 @@ A wrapper module for using [spaCy](https://spacy.io/) natural language processin
 To use `ruby-spacy`, which uses [PyCall](https://github.com/mrkn/pycall.rb), make sure that the `enable-shared` option is enabled in your Python installation. You can use [pyenv](https://github.com/pyenv/pyenv) to install any version of Python you like. Do it as follows to install Python 3.5.9 for instance:
 
 ```shell
-$ env CONFIGURE_OPTS="--enable-shared" pyenv install 3.5.9
+$ env CONFIGURE_OPTS="--enable-shared" pyenv install 3.8.5
 ```
 
 If you use the python installation locally:
 
 ```shell
-$ pyenv local 3.5.9 
+$ pyenv local 3.8.5 
 ```
 
 Or if you use the python installation globally:
 
 ```shell
-$ pyenv global 3.5.9
+$ pyenv global 3.8.5 
 ```
 
 Then, you can install [spaCy](https://spacy.io/) in any way you like. For example, if you use `pip`, you can do the following.

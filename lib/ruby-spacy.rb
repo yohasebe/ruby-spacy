@@ -4,9 +4,10 @@ require_relative "ruby-spacy/version"
 require 'enumerator'
 require 'strscan'
 require 'pycall/import'
+require 'numpy'
 include PyCall::Import
 
-$gpu = false
+$gpu = true
 
 module Spacy
   class Error < StandardError; end
@@ -14,6 +15,21 @@ module Spacy
   def self.generator_to_array(py_generator)
     PyCall::List.(py_generator)
   end
+
+  # class Lexeme
+  #   attr_reader :spacy_lexeme_id, :py_lexeme
+
+  #   def initialize(py_lexeme)
+  #     options = PyCall::Dict.(options)
+  #     PyCall.exec("#{@spacy_lexeme_id}_opts = #{options}")
+  #     PyCall.exec("#{@spacy_lexeme_id} = Lexeme(#{nlp.spacy_nlp_id}.vocab, #{orth_id}, **#{spacy_lexeme_id}_opts)")
+  #     @py_lexeme = PyCall.eval(@spacy_lexeme_id)
+  #   end
+
+  #   def method_missing(name, *args)
+  #     @py_lexeme.send(name, *args)
+  #   end
+  # end
 
   class Span
     attr_reader :spacy_span_id, :py_span, :doc
@@ -370,6 +386,29 @@ PY
 
     def tokenizer
       return PyCall.eval("#{@spacy_nlp_id}.tokenizer")
+    end
+
+    def get_lexeme(text)
+      text = text.gsub("'", "\'")
+      py_lexeme = PyCall.eval("#{@spacy_nlp_id}.vocab['#{text}']")
+      return py_lexeme
+    end
+
+    def most_similar(vector, n)
+      vec_array = Numpy.asarray([vector])
+      py_result = @py_nlp.vocab.vectors.most_similar(vec_array, n: n)
+      key_texts = PyCall.eval("[[str(n), #{@spacy_nlp_id}.vocab[n].text] for n in #{py_result[0][0].tolist()}]")
+      keys = key_texts.map{|kt| kt[0]}
+      texts = key_texts.map{|kt| kt[1]}
+      best_rows = PyCall::List.(py_result[1])[0]
+      scores = PyCall::List.(py_result[2])[0]
+
+      results = []
+      n.times do |i|
+        results << {key: keys[i].to_i, text: texts[i], best_row: best_rows[i], score: scores[i]}
+      end
+
+      results
     end
 
     def method_missing(name, *args)
