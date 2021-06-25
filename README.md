@@ -372,6 +372,90 @@ doc1: 今日は雨ばっかり降って、嫌な天気ですね。
 doc2: あいにくの悪天候で残念です。
 Similarity: 0.8684192637149641
 ```
+
+**Word Vector Example**
+
+```ruby```
+require "ruby-spacy"
+require "terminal-table"
+
+nlp = Spacy::Language.new("en_core_web_lg")
+
+tokyo = nlp.get_lexeme("Tokyo")
+japan = nlp.get_lexeme("Japan")
+france = nlp.get_lexeme("France")
+
+query = tokyo.vector - japan.vector + france.vector
+
+headings = ["key", "text", "score"]
+rows = []
+
+results = nlp.most_similar(query, 10)
+results.each do |lexeme|
+  rows << [lexeme[:key], lexeme[:text], lexeme[:score],]
+end
+
+table = Terminal::Table.new rows: rows, headings: headings
+puts table
+```
+
+**Output**
+
+| key                  | text        | score              |
+|:---------------------|:------------|:-------------------|
+| 1432967385481565694  | FRANCE      | 0.8346999883651733 |
+| 6613816697677965370  | France      | 0.8346999883651733 |
+| 4362406852232399325  | france      | 0.8346999883651733 |
+| 1637573253267610771  | PARIS       | 0.7703999876976013 |
+| 15322182186497800017 | paris       | 0.7703999876976013 |
+| 10427160276079242800 | Paris       | 0.7703999876976013 |
+| 975948890941980630   | TOULOUSE    | 0.6381999850273132 |
+| 7944504257273452052  | Toulouse    | 0.6381999850273132 |
+| 9614730213792621885  | toulouse    | 0.6381999850273132 |
+| 8515538464606421210  | marseille   | 0.6370999813079834 |
+
+
+**Word Vector Example (Japanese)**
+
+```ruby
+require "ruby-spacy"
+require "terminal-table"
+
+nlp = Spacy::Language.new("ja_core_news_lg")
+
+tokyo = nlp.get_lexeme("東京")
+japan = nlp.get_lexeme("日本")
+france = nlp.get_lexeme("フランス")
+
+query = tokyo.vector - japan.vector + france.vector
+
+headings = ["key", "text", "score"]
+rows = []
+
+results = nlp.most_similar(query, 10)
+results.each do |lexeme|
+  rows << [lexeme[:key], lexeme[:text], lexeme[:score],]
+end
+
+table = Terminal::Table.new rows: rows, headings: headings
+puts table
+```
+
+**Output**
+
+| key                  | text           | score              |
+|:---------------------|:---------------|:-------------------|
+| 12090003238699662352 | パリ           | 0.7376999855041504 |
+| 18290786970454458111 | フランス       | 0.7221999764442444 |
+| 9360021637096476946  | 東京           | 0.6697999835014343 |
+| 2437546359230213520  | ストラスブール | 0.631600022315979  |
+| 13988178952745813186 | リヨン         | 0.5939000248908997 |
+| 10427160276079242800 | Paris          | 0.574400007724762  |
+| 5562396768860926997  | ベルギー       | 0.5683000087738037 |
+| 15029176915627965481 | ニース         | 0.5679000020027161 |
+| 9750625950625019690  | アルザス       | 0.5644999742507935 |
+| 2381640614569534741  | 南仏           | 0.5547999739646912 |
+
 ----
 
 ## Author
