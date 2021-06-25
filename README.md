@@ -373,7 +373,7 @@ doc2: あいにくの悪天候で残念です。
 Similarity: 0.8684192637149641
 ```
 
-**Word Vector Example**
+**Word Vector Calculation Example**
 
 ```ruby
 require "ruby-spacy"
@@ -415,7 +415,7 @@ puts table
 | 8515538464606421210  | marseille   | 0.6370999813079834 |
 
 
-**Word Vector Example (Japanese)**
+**Word Vector Calculation Example (Japanese)**
 
 ```ruby
 require "ruby-spacy"
