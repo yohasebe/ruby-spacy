@@ -1,6 +1,6 @@
 # ruby-spacy
 
-This project is **work-in-progress** and is provided as-is. There may be breaking changes committed to this repository without notice.
+❕ This project is **work-in-progress** and is provided as-is. There may be breaking changes committed to this repository without notice.
 
 ## Overview 
 
