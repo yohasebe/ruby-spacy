@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "A wrapper module for using spaCy natural language processing library from the Ruby programming language using PyCall"
   spec.description   =<<EOD
-ruby-spacy** is a wrapper module for using spaCy from the Ruby programming language via PyCall. This module aims to make it easy and natural for Ruby programmers to use spaCy. This module covers the areas of spaCy functionality for using many varieties of its language models, not for building ones.
+ruby-spacy is a wrapper module for using spaCy from the Ruby programming language via PyCall. This module aims to make it easy and natural for Ruby programmers to use spaCy. This module covers the areas of spaCy functionality for using many varieties of its language models, not for building ones.
 EOD
 
   spec.homepage      = "https://github.com/yohasebe/ruby-spacy"
