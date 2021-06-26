@@ -71,7 +71,7 @@ Or install it yourself as:
 
 ## Usage
 
-See Examples below.
+See [Examples](#examples) below.
 
 ## Examples
 
@@ -386,7 +386,7 @@ doc2: あいにくの悪天候で残念です。
 Similarity: 0.8684192637149641
 ```
 
-### Word Vector calculation
+### Word vector calculation
 
 **Tokyo - Japan + France = Paris ?**
 
@@ -432,7 +432,7 @@ Output:
 | 8515538464606421210  | marseille   | 0.6370999813079834 |
 
 
-### Word Vector calculation (Japanese)
+### Word vector calculation (Japanese)
 
 **東京 - 日本 + フランス = パリ ?**
 
