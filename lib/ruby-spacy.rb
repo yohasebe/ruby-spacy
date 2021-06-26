@@ -248,7 +248,7 @@ module Spacy
 
     # String representation of the token.
     # @return [String] 
-    def to_str
+    def to_s
       @text
     end
 
@@ -326,7 +326,7 @@ PY
 
     # String representation of the token.
     # @return [String] 
-    def to_str
+    def to_s
       @text
     end
 
@@ -421,7 +421,7 @@ PY
     # Visualize the document in one of two styles: dep (dependencies) or ent (named entities).
     # @param style [String] Either `dep` or `ent`
     # @param compact [Boolean] Only relevant to the `dep' style
-    # @return [String] In the case of `dep`, the output text is an SVG while in the `ent` style, the output text is an HTML.
+    # @return [String] in the case of `dep`, the output text is an SVG while in the `ent` style, the output text is an HTML.
     def displacy(style: "dep", compact: false)
       PyCall.eval("displacy.render(#{@spacy_doc_id}, style='#{style}', options={'compact': #{compact.to_s.capitalize}}, jupyter=False)")
     end
@@ -499,7 +499,7 @@ PY
       Doc.new(@spacy_nlp_id, text)
     end
 
-    # Generate a matcher associated with the current language model.
+    # Generates a matcher for the current language model.
     # @return [Matcher]
     def matcher
       Matcher.new(@spacy_nlp_id)

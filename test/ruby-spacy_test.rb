@@ -17,8 +17,18 @@ class SpacyTest < Minitest::Test
     @nlp = Spacy::Language.new
   end
 
+  def test_doc_each
+    doc = @nlp.read("Hello everybody!")
+    assert_equal doc.class.name, "Spacy::Doc"
+    doc.each do |token|
+      assert_equal token.class.name, "Spacy::Token"
+    end
+  end
+
   def test_doc_slice
     doc = @nlp.read("Give it back! He pleaded.")
+    assert_equal doc[0].class.name, "Spacy::Token"
+    assert_equal doc[0..-1].class.name, "Spacy::Span"
     assert_equal doc[0].text, "Give"
     assert_equal doc[-1].text, "."
   end
@@ -91,13 +101,6 @@ class SpacyTest < Minitest::Test
     assert_equal doc.tokens[4].head.text, "in"
   end
 
-  def test_doc_ents
-    doc = @nlp.read("Mr. Best flew to New York on Saturday morning.")
-    ents = doc.ents
-    assert_equal ents[0].label_, "PERSON"
-    assert_equal ents[0].text, "Best"
-  end
-
   def test_doc_noun_chunks
     doc = @nlp.read("A phrase with another phrase occurs.")
     chunks = doc.noun_chunks
@@ -113,9 +116,16 @@ class SpacyTest < Minitest::Test
     assert_equal sents.collect{|s|s.root.text}, ["is", "'s"]
   end
 
+  def test_doc_ents
+    doc = @nlp.read("Mr. Best flew to New York on Saturday morning.")
+    ents = doc.ents
+    assert_equal ents[0].label_, "PERSON"
+    assert_equal ents[0].text, "Best"
+  end
+
   def test_doc_py_has_vector
     doc = @nlp.read("I like apples")
-    assert_equal doc.has_vector, true
+    assert doc.has_vector
   end
 
   def test_doc_py_vector
@@ -159,6 +169,15 @@ class SpacyTest < Minitest::Test
   # Tests with a name having a "test_py" prefix uses spaCy methods
   # directly without a ruby wrapper method (hence not defined in ruby-spacy.rb)
 
+  def test_span_each
+    doc = @nlp.read("Hello everybody!")
+    span = doc[0 .. -1]
+    assert_equal span.class.name, "Spacy::Span"
+    span.each do |token|
+      assert_equal token.class.name, "Spacy::Token"
+    end
+  end
+
   def test_span_slice
     doc = @nlp.read("Give it back! He pleaded.")
     span1 = doc[0 .. 3]
@@ -191,6 +210,11 @@ class SpacyTest < Minitest::Test
     ents = doc.span(0, 3).ents
     assert_equal ents[0].label_, "PERSON"
     assert_equal ents[0].text, "Best"
+  end
+
+  def test_span_sent
+    doc = @nlp.read("Give it back! He pleaded.")
+    assert_equal doc.span(0, 1).sent.text, "Give it back!"
   end
 
   def test_span_noun_chunks
@@ -235,9 +259,58 @@ class SpacyTest < Minitest::Test
     assert_equal doc.span(0 .. 3).subtree.size, 4
   end
 
-  def test_span_sent
-    doc = @nlp.read("Give it back! He pleaded.")
-    assert_equal doc.span(0, 1).sent.text, "Give it back!"
+  # ============================
+  # Token related methods
+  # ============================
+
+  def test_token_subtree
+    doc = @nlp.read("I like New York in Autumn.")
+    token = doc[3] # "York"
+    assert_equal token.class.name, "Spacy::Token"
+    assert_equal token.subtree.map(&:text), ["New", "York", "in", "Autumn"] 
+  end
+
+  def test_token_ancestors
+    doc = @nlp.read("I like New York in Autumn.")
+    token = doc[4] # "in"
+    assert_equal token.class.name, "Spacy::Token"
+    assert_equal token.ancestors.map(&:text), ["York", "like"] 
+  end
+
+  def test_token_children
+    doc = @nlp.read("I like New York in Autumn.")
+    token = doc[1] # "like"
+    assert_equal token.class.name, "Spacy::Token"
+    assert_equal token.children.map(&:text), ["I", "York", "."] 
+  end
+
+  def test_token_lefts
+    doc = @nlp.read("I like New York in Autumn.")
+    token = doc[1] # "like"
+    assert_equal token.class.name, "Spacy::Token"
+    assert_equal token.lefts.map(&:text), ["I"] 
+  end
+
+  def test_token_rights
+    doc = @nlp.read("I like New York in Autumn.")
+    token = doc[1] # "like"
+    assert_equal token.class.name, "Spacy::Token"
+    assert_equal token.rights.map(&:text), ["York", "."] 
+  end
+
+  def test_token_rights
+    doc = @nlp.read("I like New York in Autumn.")
+    token = doc[-1]
+    assert_equal "#{token}", "."
+  end
+
+  def test_token_method_missing
+    doc = @nlp.read("I like New York in Autumn.")
+    tokens = doc.tokens
+    selected = tokens.select do |t|
+      !t.is_stop
+    end
+    assert_equal selected.map(&:text), ["like", "New", "York", "Autumn", "."]
   end
 
   # ============================
@@ -257,30 +330,4 @@ class SpacyTest < Minitest::Test
     assert_equal span.label_, "US_PRESIDENT"
   end
 
-  # def test_
-  #   text = []
-  #   buffer = []
-  #   f = File.open(File.dirname(__FILE__) + "/gulliver.txt", "r")
-  #   while line = f.gets
-  #     data = line.strip
-  #     if data == "" && !buffer.empty?
-  #       text << buffer.join(" ")
-  #       buffer.clear
-  #     else
-  #       buffer << data
-  #     end
-  #   end
-  #   text << buffer.join(" ") unless buffer.empty?
-  #   f.close
-  #   puts "Num of paragraphs: #{text.size}" 
-
-  #   results = {num_sentences: 0}
-  #   text.each_with_index do |para, index|
-  #     doc = @nlp.read(para)
-  #     num_sents = doc.sents.size
-  #     results[:num_sentences] += num_sents 
-  #     puts "Processing para ##{index}: #{num_sents} sentences"
-  #     pp doc.ents
-  #   end
-  # end
 end
