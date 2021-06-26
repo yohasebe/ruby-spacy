@@ -115,8 +115,6 @@ Output:
 
 → [spaCy: Part-of-speech tags and dependencies](https://spacy.io/usage/spacy-101#annotations-pos-deps)
 
-→ [POS and morphology tags](https://github.com/explosion/spaCy/blob/master/spacy/glossary.py)
-
 Ruby code: 
 
 ```ruby
@@ -126,14 +124,11 @@ require "terminal-table"
 nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("Apple is looking at buying U.K. startup for $1 billion")
 
-headings = ["text", "shape", "is_alpha", "is_stop", "morphology"]
+headings = ["text", "lemma", "pos", "tag", "dep"]
 rows = []
 
 doc.each do |token|
-  morph = token.morphology.map do |k, v|
-    "#{k} = #{v}"
-  end.join("\n")
-  rows << [token.text, token.shape_, token.is_alpha, token.is_stop, morph]
+  rows << [token.text, token.lemma_, token.pos_, token.tag_, token.dep_]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings
@@ -199,6 +194,8 @@ Output:
 
 ### Morphology 
 
+→ [POS and morphology tags](https://github.com/explosion/spaCy/blob/master/spacy/glossary.py)
+
 Ruby code:
 
 ```ruby
@@ -212,11 +209,15 @@ headings = ["text", "shape", "is_alpha", "is_stop", "morphology"]
 rows = []
 
 doc.each do |token|
-  rows << [token.text, token.shape_, token.is_alpha, token.is_stop, token.morphology(false)]
+  morph = token.morphology.map do |k, v|
+    "#{k} = #{v}"
+  end.join("\n")
+  rows << [token.text, token.shape_, token.is_alpha, token.is_stop, morph]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings
 puts table
+
 ```
 
 Output:
