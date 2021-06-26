@@ -1,49 +1,57 @@
 # ruby-spacy
 
-A wrapper module for using [spaCy](https://spacy.io/) natural language processing library from the Ruby programming language using PyCall
+## Overview 
 
-----
+**ruby-spacy** is a wrapper module for using [spaCy](https://spacy.io/) from the Ruby programming language via [PyCall](https://github.com/mrkn/pycall.rb). This module aims to make it easy and natural for Ruby programmers to use spaCy. This module covers the areas of spaCy functionality for _using_ many varieties of its language models, not for _building_ ones.
 
-## Preparation
+- Tokenization, lemmatization, sentence segmentation
+- Part-of-speech tagging and dependency parsing
+- Named entity recognition
+- Syntactic dependency visualization
+- Access to pre-trained word vectors
 
-To use `ruby-spacy`, which uses [PyCall](https://github.com/mrkn/pycall.rb), make sure that the `enable-shared` option is enabled in your Python installation. You can use [pyenv](https://github.com/pyenv/pyenv) to install any version of Python you like. Do it as follows to install Python 3.5.9 for instance:
+## Installation of prerequisites
+
+Make sure that the `enable-shared` option is enabled in your Python installation. You can use [pyenv](https://github.com/pyenv/pyenv) to install any version of Python you like. Install Python 3.8.5, for instance, using pyenv with `enable-shared` as follows:
 
 ```shell
 $ env CONFIGURE_OPTS="--enable-shared" pyenv install 3.8.5
 ```
 
-If you use the python installation locally:
+Don't forget to make it accessible from your working directory.
 
 ```shell
 $ pyenv local 3.8.5 
 ```
 
-Or if you use the python installation globally:
+Or alternatively:
 
 ```shell
 $ pyenv global 3.8.5 
 ```
 
-Then, you can install [spaCy](https://spacy.io/) in any way you like. For example, if you use `pip`, you can do the following.
+Then, install [spaCy](https://spacy.io/). If you use `pip`, the following command will do:
 
 ```shell
 $ pip install spacy
 ```
 
-Then install trained models/pipelines. For a starter, `en_core_web_sm` is useful to process text in English. (If you use word vector functionalites of spaCy, also install `en_core_web_lg`)
+Install trained language models. For a starter, `en_core_web_sm` will be the most useful to conduct basic text processing in English. However, if you want to use advanced features of spaCy, such as named entity recognition or document similarity calculation, you should also install a larger model like `en_core_web_lg`.
+
 
 ```shell
 $ python -m spacy download en_core_web_sm
+$ python -m spacy download en_core_web_lg
 ```
-See [Spacy: Models & Languages](https://spacy.io/usage/models) for models in other languages. To install a large model for the Japanese language, for instance, download the package as follows:
+
+See [Spacy: Models & Languages](https://spacy.io/usage/models) for other models in various languages. To install models for the Japanese language, for instance, you can do it as follows:
 
 ```shell
+$ python -m spacy download ja_core_news_sm
 $ python -m spacy download ja_core_news_lg
 ```
 
-----
-
-## Installation
+## Installation of ruby-spacy
 
 Add this line to your application's Gemfile:
 
@@ -59,23 +67,19 @@ Or install it yourself as:
 
     $ gem install ruby-spacy
 
-----
-
 ## Usage
 
 See Examples below.
 
-----
-
 ## Examples
 
-The following are basically Python to Ruby translations of examples from [spaCy 101](https://spacy.io/usage/spacy-101). <u>For more examples, look inside the `examples` folder.</u>
+Many of the following examples are Python-to-Ruby translations of code snippets in [spaCy 101](https://spacy.io/usage/spacy-101). For more examples, look inside the `examples` directory.
 
 ### Tokenization
 
-- → [spaCy 101](https://spacy.io/usage/spacy-101#annotations-token)
+→ [spaCy: Tokenization](https://spacy.io/usage/spacy-101#annotations-token)
 
-**Tokenization Example**
+Ruby code: 
 
 ```ruby
 require "ruby-spacy"
@@ -97,18 +101,19 @@ table = Terminal::Table.new rows: [row], headings: headings
 puts table
 ```
 
-**Output**
+Output:
 
 | 1     | 2  | 3       | 4  | 5      | 6    | 7       | 8   | 9 | 10 | 11      |
 |:-----:|:--:|:-------:|:--:|:------:|:----:|:-------:|:---:|:-:|:--:|:-------:|
 | Apple | is | looking | at | buying | U.K. | startup | for | $ | 1  | billion |
 
-### Part-of-speech Tags and Dependencies
+### Part-of-speech tagging
 
-- → [spaCy 101](https://spacy.io/usage/spacy-101#annotations-pos-deps)
-- → [POS and Morphology Tags](https://github.com/explosion/spaCy/blob/master/spacy/glossary.py)
+→ [spaCy: Part-of-speech tags and dependencies](https://spacy.io/usage/spacy-101#annotations-pos-deps)
 
-**POS Example**
+→ [POS and morphology tags](https://github.com/explosion/spaCy/blob/master/spacy/glossary.py)
+
+Ruby code: 
 
 ```ruby
 require "ruby-spacy"
@@ -128,7 +133,7 @@ table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
 
-**Output**
+Output:
 
 | text    | lemma   | pos   | tag | dep      | shape | is_alpha | is_stop |
 |:--------|:--------|:------|:----|:---------|:------|:---------|:--------|
@@ -144,7 +149,9 @@ puts table
 | 1       | 1       | NUM   | CD  | compound | d     | false    | false   |
 | billion | billion | NUM   | CD  | pobj     | xxxx  | true     | false   |
 
-**POS Example (Japanese)**
+### Part-of-speech tagging (Japanese)
+
+Ruby code: 
 
 ```ruby
 require( "ruby-spacy")
@@ -164,7 +171,7 @@ table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
 
-**Output**
+Output:
 
 | text       | lemma      | pos   | tag                      | dep    | shape  | is_alpha | is_stop |
 |:-----------|:-----------|:------|:-------------------------|:-------|:-------|:---------|:--------|
@@ -183,11 +190,11 @@ puts table
 | た         | た         | AUX   | 助動詞                   | aux    | x      | true     | true    |
 | 。         | 。         | PUNCT | 補助記号-句点            | punct  | 。     | false    | false   |
 
-### Visualizing Dependency
+### Visualizing dependency
 
-- → [spaCy Visualizers](https://spacy.io/usage/visualizers)
+→ [spaCy: Visualizers](https://spacy.io/usage/visualizers)
 
-**Dependency Visualization Example**
+Ruby code: 
 
 ```ruby
 require "ruby-spacy"
@@ -204,12 +211,13 @@ File.open(File.join("test_dep.svg"), "w") do |file|
 end
 ```
 
-**Output**
+Output:
 
 ![](https://github.com/yohasebe/ruby-spacy/blob/main/examples/get_started/outputs/test_dep.svg)
 
+### Visualizing dependency (compact)
 
-**Dependency Visualization Example (Compact)**
+Ruby code: 
 
 ```ruby
 require "ruby-spacy"
@@ -226,15 +234,15 @@ File.open(File.join("test_dep_compact.svg"), "w") do |file|
 end
 ```
 
-**Output**
+Output:
 
 ![](https://github.com/yohasebe/ruby-spacy/blob/main/examples/get_started/outputs/test_dep_compact.svg)
 
-### Named Entities 
+### Named entity recognition
 
-- → [spaCy 101](https://spacy.io/usage/spacy-101#annotations-ner)
+→ [spaCy: Named entities](https://spacy.io/usage/spacy-101#annotations-ner)
 
-**Named Entities Example**
+Ruby code: 
 
 ```ruby
 require "ruby-spacy"
@@ -254,7 +262,7 @@ table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
 
-**Output**
+Output:
 
 | text       | start_char | end_char | label |
 |:-----------|-----------:|---------:|:------|
@@ -262,7 +270,9 @@ puts table
 | U.K.       | 27         | 31       | GPE   |
 | $1 billion | 44         | 54       | MONEY |
 
-**Named Entity Example (Japanese)**
+### Named entity recognition (Japanese)
+
+Ruby code: 
 
 ```ruby
 require( "ruby-spacy")
@@ -284,7 +294,7 @@ table = Terminal::Table.new rows: rows, headings: headings
 print table
 ```
 
-**Output**
+Output:
 
 | text       | start | end | label   |
 |:-----------|------:|----:|:--------|
@@ -293,17 +303,11 @@ print table
 | ファミコン | 10    | 15  | PRODUCT |
 | 14,800円   | 16    | 23  | MONEY   |
 
-### Word Vectors and Similarity
+### Checking availability of word vectors
 
-- → [spaCy 101](https://spacy.io/usage/spacy-101#vectors-similarity)
+→ [spaCy: Word vectors and similarity](https://spacy.io/usage/spacy-101#vectors-similarity)
 
-These functionalities need a larger pipeline package than the one that ends in `sm`:
-
-```shell
-$ python -m spacy download en_core_web_lg
-```
-
-**Word Vector Example**
+Ruby code: 
 
 ```ruby
 require "ruby-spacy"
@@ -322,7 +326,8 @@ headings = ["text", "has_vector", "vector_norm", "is_oov"]
 table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
-**Output**
+
+Output:
 
 | text    | has_vector | vector_norm | is_oov |
 |:--------|:-----------|:------------|:-------|
@@ -331,7 +336,9 @@ puts table
 | banana  | true       | 6.700014    | false  |
 | afskfsd | false      | 0.0         | true   |
 
-**Similarity Example**
+### Similarity calculation
+
+Ruby code: 
 
 ```ruby
 require "ruby-spacy"
@@ -346,14 +353,17 @@ puts "Similarity: #{doc1.similarity(doc2)}"
 
 ```
 
-**Output**
+Output:
 
 ```text
 Doc 1: I like salty fries and hamburgers.
 Doc 2: Fast food tastes very good.
 Similarity: 0.7687607012190486
 ```
-**Similarity Example (Japanese)**
+
+### Similarity calculation (Japanese)
+
+Ruby code: 
 
 ```ruby
 require "ruby-spacy"
@@ -366,7 +376,7 @@ puts "doc2: #{ja_doc2.text}"
 puts "Similarity: #{ja_doc1.similarity(ja_doc2)}"
 ```
 
-**Output**
+Output:
 
 ```text
 doc1: 今日は雨ばっかり降って、嫌な天気ですね。
@@ -374,9 +384,11 @@ doc2: あいにくの悪天候で残念です。
 Similarity: 0.8684192637149641
 ```
 
-**Word Vector Calculation Example**
+### Word Vector calculation
 
-Tokyo - Japan + France = Paris ?
+**Tokyo - Japan + France = Paris ?**
+
+Ruby code: 
 
 ```ruby
 require "ruby-spacy"
@@ -402,7 +414,7 @@ table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
 
-**Output**
+Output:
 
 | key                  | text        | score              |
 |:---------------------|:------------|:-------------------|
@@ -418,9 +430,11 @@ puts table
 | 8515538464606421210  | marseille   | 0.6370999813079834 |
 
 
-**Word Vector Calculation Example (Japanese)**
+### Word Vector calculation (Japanese)
 
-東京 - 日本 + フランス = パリ ?
+**東京 - 日本 + フランス = パリ ?**
+
+Ruby code: 
 
 ```ruby
 require "ruby-spacy"
@@ -446,7 +460,7 @@ table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
 
-**Output**
+Output:
 
 | key                  | text           | score              |
 |:---------------------|:---------------|:-------------------|
@@ -461,11 +475,18 @@ puts table
 | 9750625950625019690  | アルザス       | 0.5644999742507935 |
 | 2381640614569534741  | 南仏           | 0.5547999739646912 |
 
-----
 
 ## Author
 
 Yoichiro Hasebe [<yohasebe@gmail.com>]
+
+
+## Acknowlegments
+
+I would like to thank the following open source projects and their creators for making this project possible:
+
+- [explosion/spaCy](https://github.com/explosion/spaCy)
+- [mrkn/pycall.rb](https://github.com/mrkn/pycall.rb)
 
 ## License
 
