@@ -81,7 +81,7 @@ Many of the following examples are Python-to-Ruby translations of code snippets 
 
 ### Tokenization
 
-→ [spaCy: Tokenization](https://spacy.io/usage/spacy-101#annotations-token)
+🔖 [spaCy: Tokenization](https://spacy.io/usage/spacy-101#annotations-token)
 
 Ruby code: 
 
@@ -113,9 +113,9 @@ Output:
 
 ### Part-of-speech tagging
 
-→ [spaCy: Part-of-speech tags and dependencies](https://spacy.io/usage/spacy-101#annotations-pos-deps)
+🔖 [spaCy: Part-of-speech tags and dependencies](https://spacy.io/usage/spacy-101#annotations-pos-deps)
 
-→ [POS and morphology tags](https://github.com/explosion/spaCy/blob/master/spacy/glossary.py)
+🔖 [POS and morphology tags](https://github.com/explosion/spaCy/blob/master/spacy/glossary.py)
 
 Ruby code: 
 
@@ -196,7 +196,7 @@ Output:
 
 ### Visualizing dependency
 
-→ [spaCy: Visualizers](https://spacy.io/usage/visualizers)
+🔖 [spaCy: Visualizers](https://spacy.io/usage/visualizers)
 
 Ruby code: 
 
@@ -244,7 +244,7 @@ Output:
 
 ### Named entity recognition
 
-→ [spaCy: Named entities](https://spacy.io/usage/spacy-101#annotations-ner)
+🔖 [spaCy: Named entities](https://spacy.io/usage/spacy-101#annotations-ner)
 
 Ruby code: 
 
@@ -309,7 +309,7 @@ Output:
 
 ### Checking availability of word vectors
 
-→ [spaCy: Word vectors and similarity](https://spacy.io/usage/spacy-101#vectors-similarity)
+🔖 [spaCy: Word vectors and similarity](https://spacy.io/usage/spacy-101#vectors-similarity)
 
 Ruby code: 
 
