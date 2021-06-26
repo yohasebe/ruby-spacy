@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("ja_core_news_lg")
@@ -12,5 +12,12 @@ doc.noun_chunks.each do |chunk|
   rows << [chunk.text, chunk.root.text, chunk.root.dep_, chunk.root.head.text]
 end
 
-pp spacy.pipe_names
+table = Terminal::Table.new rows: rows, headings: headings
 puts table
+
+# +------------+-----------+----------+----------------+
+# | text       | root.text | root.dep | root.head.text |
+# +------------+-----------+----------+----------------+
+# | 自動運転車 | 車        | nsubj    | 転嫁           |
+# | 製造者     | 者        | obl      | 転嫁           |
+# +------------+-----------+----------+----------------+

@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
@@ -14,3 +14,6 @@ tokenizer.add_special_case("gimme", special_case)
 
 # Check new tokenization
 puts nlp.read("gimme that").tokens.join(" ")
+
+# gimme that
+# gim me that

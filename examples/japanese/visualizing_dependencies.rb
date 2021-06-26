@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("ja_core_news_sm")

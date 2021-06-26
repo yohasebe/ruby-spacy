@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
@@ -29,3 +29,13 @@ end
 
 table = Terminal::Table.new rows: rows, headings: headings
 print table
+
+# +----------+----------+---------+----------+------------------------------------+
+# | text     | dep      | n_lefts | n_rights | ancestors                          |
+# +----------+----------+---------+----------+------------------------------------+
+# | Credit   | nmod     | 0       | 2        | [holders, submit]                  |
+# | and      | cc       | 0       | 0        | [Credit, holders, submit]          |
+# | mortgage | compound | 0       | 0        | [account, Credit, holders, submit] |
+# | account  | conj     | 1       | 0        | [Credit, holders, submit]          |
+# | holders  | nsubj    | 1       | 0        | [submit]                           |
+# +----------+----------+---------+----------+------------------------------------+

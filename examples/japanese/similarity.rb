@@ -7,3 +7,6 @@ ja_doc2 = nlp.read("あいにくの悪天候で残念です。")
 puts "doc2: #{ja_doc2.text}"
 puts "Similarity: #{ja_doc1.similarity(ja_doc2)}"
 
+# doc1: 今日は雨ばっかり降って、嫌な天気ですね。
+# doc2: あいにくの悪天候で残念です。
+# Similarity: 0.8684192637149641

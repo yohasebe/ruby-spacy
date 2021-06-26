@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("ja_core_news_lg")
@@ -14,4 +14,14 @@ doc.ents.each do |ent|
 end
 
 table = Terminal::Table.new rows: rows, headings: headings
-print table
+puts table
+
+# +------------+-------+-----+---------+
+# | text       | start | end | label   |
+# +------------+-------+-----+---------+
+# | 任天堂     | 0     | 3   | ORG     |
+# | 1983年     | 4     | 9   | DATE    |
+# | ファミコン | 10    | 15  | PRODUCT |
+# | 14,800円   | 16    | 23  | MONEY   |
+# +------------+-------+-----+---------+
+

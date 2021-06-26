@@ -13,3 +13,12 @@ end
 
 table = Terminal::Table.new rows: rows, headings: headings
 puts table
+
+# +---------+------------+-------------------+--------+
+# | text    | has_vector | vector_norm       | is_oov |
+# +---------+------------+-------------------+--------+
+# | dog     | true       | 7.033673286437988 | false  |
+# | cat     | true       | 6.680818557739258 | false  |
+# | banana  | true       | 6.700014114379883 | false  |
+# | afskfsd | false      | 0.0               | true   |
+# +---------+------------+-------------------+--------+

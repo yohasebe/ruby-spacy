@@ -10,3 +10,5 @@ dep_svg = doc.displacy(style: "dep", compact: false)
 File.open(File.join("test_dep.svg"), "w") do |file|
   file.write(dep_svg)
 end
+
+

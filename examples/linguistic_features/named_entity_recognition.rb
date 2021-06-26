@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
@@ -14,4 +14,12 @@ doc.ents.each do |ent|
 end
 
 table = Terminal::Table.new rows: rows, headings: headings
-print table
+puts table
+
+# +------------+-------+-----+-------+
+# | text       | start | end | label |
+# +------------+-------+-----+-------+
+# | Apple      | 0     | 5   | ORG   |
+# | U.K.       | 27    | 31  | GPE   |
+# | $1 billion | 44    | 54  | MONEY |
+# +------------+-------+-----+-------+

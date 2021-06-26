@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
@@ -16,5 +16,17 @@ doc.each do |token|
 end
 
 table = Terminal::Table.new rows: rows, headings: headings
-
 puts table
+
+# Lemmatizer mode: rule
+# +---------------+----------+-----------+----------+---------------------------+
+# | text          | dep      | head text | head pos | children                  |
+# +---------------+----------+-----------+----------+---------------------------+
+# | Autonomous    | amod     | cars      | NOUN     | []                        |
+# | cars          | nsubj    | shift     | VERB     | [Autonomous]              |
+# | shift         | ROOT     | shift     | VERB     | [cars, liability, toward] |
+# | insurance     | compound | liability | NOUN     | []                        |
+# | liability     | dobj     | shift     | VERB     | [insurance]               |
+# | toward        | prep     | shift     | VERB     | [manufacturers]           |
+# | manufacturers | pobj     | toward    | ADP      | []                        |
+# +---------------+----------+-----------+----------+---------------------------+

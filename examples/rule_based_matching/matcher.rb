@@ -10,9 +10,10 @@ matcher.add("HelloWorld", pattern)
 doc = nlp.read("Hello, world! Hello world!")
 matches = matcher.match(doc)
 
-matches.each do | match_id, range |
-  string_id = nlp.vocab_string_lookup(match_id)
-  span = doc.span(range)
-  puts "#{match_id}, #{string_id}, #{range.to_s}, #{span.text}"
+matches.each do | match |
+  string_id = nlp.vocab_string_lookup(match[:match_id])
+  span = doc.span(match[:start_index]..match[:end_index])
+  puts "#{string_id}, #{span.text}"
 end
 
+# HelloWorld, Hello, world

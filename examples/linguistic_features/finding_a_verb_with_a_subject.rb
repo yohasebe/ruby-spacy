@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
@@ -14,5 +14,7 @@ doc.each do |token|
   end
 end
 
-pp results.to_s
+puts results.to_s
+
+# [shift]
 

@@ -14,3 +14,11 @@ end
 table = Terminal::Table.new rows: rows, headings: headings
 
 puts table
+
+# +------------+------------+----------+-------+
+# | text       | start_char | end_char | label |
+# +------------+------------+----------+-------+
+# | Apple      | 0          | 5        | ORG   |
+# | U.K.       | 27         | 31       | GPE   |
+# | $1 billion | 44         | 54       | MONEY |
+# +------------+------------+----------+-------+

@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
@@ -15,3 +15,15 @@ end
 
 table = Terminal::Table.new rows: rows, headings: headings
 print table
+
+# +-----------+---------+----------+-----------+
+# | text      | ent_iob | ent_iob_ | ent_type_ |
+# +-----------+---------+----------+-----------+
+# | San       | 3       | B        | GPE       |
+# | Francisco | 1       | I        | GPE       |
+# | considers | 2       | O        |           |
+# | banning   | 2       | O        |           |
+# | sidewalk  | 2       | O        |           |
+# | delivery  | 2       | O        |           |
+# | robots    | 2       | O        |           |
+# +-----------+---------+----------+-----------+

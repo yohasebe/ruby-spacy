@@ -8,3 +8,6 @@ puts "Doc 1: " + doc1
 puts "Doc 2: " + doc2
 puts "Similarity: #{doc1.similarity(doc2)}"
 
+# Doc 1: I like salty fries and hamburgers.
+# Doc 2: Fast food tastes very good.
+# Similarity: 0.7687607012190486

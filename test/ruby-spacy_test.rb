@@ -73,7 +73,7 @@ class SpacyTest < Minitest::Test
   def test_doc_retokenize
     doc = @nlp.read("I like David Bowie")
     attrs = {LEMMA: "David Bowie"}
-    doc.retokenize(2..4, attrs = attrs)
+    doc.retokenize(2, 4, attrs = attrs)
     assert_equal doc[2].text, "David Bowie"
     assert_equal doc[2].lemma_, "David Bowie"
   end
@@ -250,10 +250,9 @@ class SpacyTest < Minitest::Test
 
     doc = @nlp.read("Barack Obama was the 44th president of the United States")
 
-    matches = matcher.match(doc)
+    match = matcher.match(doc).first
 
-    match_id, range = matches.first
-    span = Spacy::Span.new(doc, range, {label: match_id})
+    span = Spacy::Span.new(doc, start_index: match[:start_index], end_index: match[:end_index], options: {label: match[:match_id]})
     assert_equal span.text, "Barack Obama"
     assert_equal span.label_, "US_PRESIDENT"
   end

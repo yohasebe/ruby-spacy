@@ -12,3 +12,8 @@ gem 'pycall'
 gem 'numpy'
 gem 'terminal-table'
 
+group :development do
+  gem 'yard'
+  gem 'redcarpet'
+  gem 'github-markup'
+end

@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
@@ -16,5 +16,16 @@ doc.each do |token|
 end
 
 table = Terminal::Table.new rows: rows, headings: headings
-
 puts table
+
+# Lemmatizer mode: rule
+# +-------+
+# | lemma |
+# +-------+
+# | I     |
+# | be    |
+# | read  |
+# | the   |
+# | paper |
+# | .     |
+# +-------+

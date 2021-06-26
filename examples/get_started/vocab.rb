@@ -5,3 +5,6 @@ doc = nlp.read("I love coffee")
 
 pp doc.vocab.strings["coffee"]
 pp doc.vocab.strings[3197928453018144401]
+
+# 3197928453018144401
+# "coffee"

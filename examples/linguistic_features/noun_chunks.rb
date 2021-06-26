@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
@@ -16,5 +16,12 @@ doc.noun_chunks.each do |chunk|
 end
 
 table = Terminal::Table.new rows: rows, headings: headings
-
 puts table
+
+# +---------------------+---------------+----------+----------------+
+# | text                | root.text     | root.dep | root.head.text |
+# +---------------------+---------------+----------+----------------+
+# | Autonomous cars     | cars          | nsubj    | shift          |
+# | insurance liability | liability     | dobj     | shift          |
+# | manufacturers       | manufacturers | pobj     | toward         |
+# +---------------------+---------------+----------+----------------+

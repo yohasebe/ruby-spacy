@@ -1,4 +1,4 @@
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
@@ -29,3 +29,8 @@ texts.each do |text|
     end
   end
 end
+
+# Net income --> $9.4 million
+# the prior year --> $2.7 million
+# Revenue --> twelve billion dollars
+# a loss --> 1b
