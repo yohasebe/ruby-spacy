@@ -219,7 +219,7 @@ puts table
 Output:
 
 | text    | shape | is_alpha | is_stop  | morphology                                                                          |
-|:--------|:------|:---------|:---------|:------------------------------------------------------------------------------------:
+|:--------|:------|:---------|:---------|:------------------------------------------------------------------------------------|
 | Apple   | PROPN | NNP      | nsubj    | NounType = Prop<br />Number = Sing                                                  |
 | is      | AUX   | VBZ      | aux      | Mood = Ind<br />Number = Sing<br />Person = 3<br />Tense = Pres<br />VerbForm = Fin |
 | looking | VERB  | VBG      | ROOT     | Aspect = Prog<br />Tense = Pres<br />VerbForm = Part                                |
