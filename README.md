@@ -1,5 +1,7 @@
 # ruby-spacy
 
+This project is **work-in-progress** and is provided as-is. There may be breaking changes committed to this repository without notice.
+
 ## Overview 
 
 **ruby-spacy** is a wrapper module for using [spaCy](https://spacy.io/) from the Ruby programming language via [PyCall](https://github.com/mrkn/pycall.rb). This module aims to make it easy and natural for Ruby programmers to use spaCy. This module covers the areas of spaCy functionality for _using_ many varieties of its language models, not for _building_ ones.
