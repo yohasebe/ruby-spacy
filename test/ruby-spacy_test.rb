@@ -304,6 +304,15 @@ class SpacyTest < Minitest::Test
     assert_equal "#{token}", "."
   end
 
+  def test_token_morph
+    doc = @nlp.read("I like New York in Autumn.")
+    token1 = doc[1]  # like
+    token2 = doc[-2] # Autumn
+    assert_equal token1.morphology["Tense"], "Pres"
+    assert_equal token1.morphology["VerbForm"], "Fin"
+    assert_equal token2.morphology(false), "NounType=Prop|Number=Sing"
+  end
+
   def test_token_method_missing
     doc = @nlp.read("I like New York in Autumn.")
     tokens = doc.tokens

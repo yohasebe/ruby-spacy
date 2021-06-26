@@ -252,6 +252,26 @@ module Spacy
       @text
     end
 
+    # Returns a hash or string of morphological information
+    # @param dict [Boolean] if true, a hash will be returned instead of a string
+    # @return [Hash, String] 
+    def morphology(hash = true)
+      if @py_token.has_morph
+        morph_analysis = @py_token.morph
+        if hash 
+          return morph_analysis.to_dict
+        else
+          return morph_analysis.to_s
+        end
+      else
+        if hash
+          results = {}
+        else
+          return ""
+        end
+      end
+    end
+
     # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
     def method_missing(name, *args)
       @py_token.send(name, *args)

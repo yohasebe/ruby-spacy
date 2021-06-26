@@ -111,7 +111,7 @@ Output:
 |:-----:|:--:|:-------:|:--:|:------:|:----:|:-------:|:---:|:-:|:--:|:-------:|
 | Apple | is | looking | at | buying | U.K. | startup | for | $ | 1  | billion |
 
-### Part-of-speech tagging
+### Part-of-speech and dependency
 
 → [spaCy: Part-of-speech tags and dependencies](https://spacy.io/usage/spacy-101#annotations-pos-deps)
 
@@ -126,73 +126,112 @@ require "terminal-table"
 nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("Apple is looking at buying U.K. startup for $1 billion")
 
+headings = ["text", "lemma", "pos", "tag", "dep"]
 rows = []
 
 doc.each do |token|
-  rows << [token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop]
+  rows << [token.text, token.lemma_, token.pos_, token.tag_, token.dep_]
 end
 
-headings = ["text", "lemma", "pos", "tag", "dep", "shape", "is_alpha", "is_stop"]
 table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
 
 Output:
 
-| text    | lemma   | pos   | tag | dep      | shape | is_alpha | is_stop |
-|:--------|:--------|:------|:----|:---------|:------|:---------|:--------|
-| Apple   | Apple   | PROPN | NNP | nsubj    | Xxxxx | true     | false   |
-| is      | be      | AUX   | VBZ | aux      | xx    | true     | true    |
-| looking | look    | VERB  | VBG | ROOT     | xxxx  | true     | false   |
-| at      | at      | ADP   | IN  | prep     | xx    | true     | true    |
-| buying  | buy     | VERB  | VBG | pcomp    | xxxx  | true     | false   |
-| U.K.    | U.K.    | PROPN | NNP | dobj     | X.X.  | false    | false   |
-| startup | startup | NOUN  | NN  | advcl    | xxxx  | true     | false   |
-| for     | for     | ADP   | IN  | prep     | xxx   | true     | true    |
-| $       | $       | SYM   | $   | quantmod | $     | false    | false   |
-| 1       | 1       | NUM   | CD  | compound | d     | false    | false   |
-| billion | billion | NUM   | CD  | pobj     | xxxx  | true     | false   |
+| text    | lemma   | pos   | tag | dep      |
+|:--------|:--------|:------|:----|:---------|
+| Apple   | Apple   | PROPN | NNP | nsubj    |
+| is      | be      | AUX   | VBZ | aux      |
+| looking | look    | VERB  | VBG | ROOT     |
+| at      | at      | ADP   | IN  | prep     |
+| buying  | buy     | VERB  | VBG | pcomp    |
+| U.K.    | U.K.    | PROPN | NNP | dobj     |
+| startup | startup | NOUN  | NN  | advcl    |
+| for     | for     | ADP   | IN  | prep     |
+| $       | $       | SYM   | $   | quantmod |
+| 1       | 1       | NUM   | CD  | compound |
+| billion | billion | NUM   | CD  | pobj     |
 
-### Part-of-speech tagging (Japanese)
+### Part-of-speech and dependency (Japanese)
 
 Ruby code: 
 
 ```ruby
-require( "ruby-spacy")
+require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("ja_core_news_lg")
-doc = nlp.read("任天堂は1983年にファミリー・コンピュータを14,800円で発売した。")
+doc = nlp.read("任天堂は1983年にファミコンを14,800円で発売した。")
 
+headings = ["text", "lemma", "pos", "tag", "dep"]
 rows = []
 
 doc.each do |token|
-  rows << [token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop]
+  rows << [token.text, token.lemma_, token.pos_, token.tag_, token.dep_]
 end
 
-headings = ["text", "lemma", "pos", "tag", "dep", "shape", "is_alpha", "is_stop"]
 table = Terminal::Table.new rows: rows, headings: headings
 puts table
 ```
 
 Output:
 
-| text       | lemma      | pos   | tag                      | dep    | shape  | is_alpha | is_stop |
-|:-----------|:-----------|:------|:-------------------------|:-------|:-------|:---------|:--------|
-| 任天堂     | 任天堂     | PROPN | 名詞-固有名詞-一般       | nsubj  | xxx    | true     | false   |
-| は         | は         | ADP   | 助詞-係助詞              | case   | x      | true     | true    |
-| 1983       | 1983       | NUM   | 名詞-数詞                | nummod | dddd   | false    | false   |
-| 年         | 年         | NOUN  | 名詞-普通名詞-助数詞可能 | obl    | x      | true     | false   |
-| に         | に         | ADP   | 助詞-格助詞              | case   | x      | true     | true    |
-| ファミコン | ファミコン | NOUN  | 名詞-普通名詞-一般       | obj    | xxxx   | true     | false   |
-| を         | を         | ADP   | 助詞-格助詞              | case   | x      | true     | true    |
-| 14,800     | 14,800     | NUM   | 名詞-数詞                | fixed  | dd,ddd | false    | false   |
-| 円         | 円         | NOUN  | 名詞-普通名詞-助数詞可能 | obl    | x      | true     | false   |
-| で         | で         | ADP   | 助詞-格助詞              | case   | x      | true     | true    |
-| 発売       | 発売       | VERB  | 名詞-普通名詞-サ変可能   | ROOT   | xx     | true     | false   |
-| し         | する       | AUX   | 動詞-非自立可能          | aux    | x      | true     | true    |
-| た         | た         | AUX   | 助動詞                   | aux    | x      | true     | true    |
-| 。         | 。         | PUNCT | 補助記号-句点            | punct  | 。     | false    | false   |
+| text       | lemma      | pos   | tag                      | dep    |
+|:-----------|:-----------|:------|:-------------------------|:-------|
+| 任天堂     | 任天堂     | PROPN | 名詞-固有名詞-一般       | nsubj  |
+| は         | は         | ADP   | 助詞-係助詞              | case   |
+| 1983       | 1983       | NUM   | 名詞-数詞                | nummod |
+| 年         | 年         | NOUN  | 名詞-普通名詞-助数詞可能 | obl    |
+| に         | に         | ADP   | 助詞-格助詞              | case   |
+| ファミコン | ファミコン | NOUN  | 名詞-普通名詞-一般       | obj    |
+| を         | を         | ADP   | 助詞-格助詞              | case   |
+| 14,800     | 14,800     | NUM   | 名詞-数詞                | fixed  |
+| 円         | 円         | NOUN  | 名詞-普通名詞-助数詞可能 | obl    |
+| で         | で         | ADP   | 助詞-格助詞              | case   |
+| 発売       | 発売       | VERB  | 名詞-普通名詞-サ変可能   | ROOT   |
+| し         | する       | AUX   | 動詞-非自立可能          | aux    |
+| た         | た         | AUX   | 助動詞                   | aux    |
+| 。         | 。         | PUNCT | 補助記号-句点            | punct  |
+
+### Morphology 
+
+Ruby code:
+
+```ruby
+require "ruby-spacy"
+require "terminal-table"
+
+nlp = Spacy::Language.new("en_core_web_sm")
+doc = nlp.read("Apple is looking at buying U.K. startup for $1 billion")
+
+headings = ["text", "shape", "is_alpha", "is_stop", "morphology"]
+rows = []
+
+doc.each do |token|
+  rows << [token.text, token.shape_, token.is_alpha, token.is_stop, token.morphology(false)]
+end
+
+table = Terminal::Table.new rows: rows, headings: headings
+puts table
+```
+
+Output:
+
+| text    | shape | is_alpha | is_stop  | morphology                                                                          |
+|:--------|:------|:---------|:---------|:------------------------------------------------------------------------------------:
+| Apple   | PROPN | NNP      | nsubj    | NounType = Prop<br />Number = Sing                                                  |
+| is      | AUX   | VBZ      | aux      | Mood = Ind<br />Number = Sing<br />Person = 3<br />Tense = Pres<br />VerbForm = Fin |
+| looking | VERB  | VBG      | ROOT     | Aspect = Prog<br />Tense = Pres<br />VerbForm = Part                                |
+| at      | ADP   | IN       | prep     |                                                                                     |
+| buying  | VERB  | VBG      | pcomp    | Aspect = Prog<br />Tense = Pres<br />VerbForm = Part                                |
+| U.K.    | PROPN | NNP      | dobj     | NounType = Prop<br />Number = Sing                                                  |
+| startup | NOUN  | NN       | advcl    | Number = Sing                                                                       |
+| for     | ADP   | IN       | prep     |                                                                                     |
+| $       | SYM   | $        | quantmod |                                                                                     |
+| 1       | NUM   | CD       | compound | NumType = Card                                                                      |
+| billion | NUM   | CD       | pobj     | NumType = Card                                                                      |
+
 
 ### Visualizing dependency
 
