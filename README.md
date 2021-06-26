@@ -218,20 +218,19 @@ puts table
 
 Output:
 
-| text    | shape | is_alpha | is_stop  | morphology                                                                          |
-|:--------|:------|:---------|:---------|:------------------------------------------------------------------------------------|
-| Apple   | PROPN | NNP      | nsubj    | NounType = Prop<br />Number = Sing                                                  |
-| is      | AUX   | VBZ      | aux      | Mood = Ind<br />Number = Sing<br />Person = 3<br />Tense = Pres<br />VerbForm = Fin |
-| looking | VERB  | VBG      | ROOT     | Aspect = Prog<br />Tense = Pres<br />VerbForm = Part                                |
-| at      | ADP   | IN       | prep     |                                                                                     |
-| buying  | VERB  | VBG      | pcomp    | Aspect = Prog<br />Tense = Pres<br />VerbForm = Part                                |
-| U.K.    | PROPN | NNP      | dobj     | NounType = Prop<br />Number = Sing                                                  |
-| startup | NOUN  | NN       | advcl    | Number = Sing                                                                       |
-| for     | ADP   | IN       | prep     |                                                                                     |
-| $       | SYM   | $        | quantmod |                                                                                     |
-| 1       | NUM   | CD       | compound | NumType = Card                                                                      |
-| billion | NUM   | CD       | pobj     | NumType = Card                                                                      |
-
+| text    | shape | is_alpha | is_stop | morphology                                                                          |
+|:--------|:------|:---------|:--------|:------------------------------------------------------------------------------------|
+| Apple   | Xxxxx | true     | false   | NounType = Prop<br />Number = Sing                                                  |
+| is      | xx    | true     | true    | Mood = Ind<br />Number = Sing<br />Person = 3<br />Tense = Pres<br />VerbForm = Fin |
+| looking | xxxx  | true     | false   | Aspect = Prog<br />Tense = Pres<br />VerbForm = Part                                |
+| at      | xx    | true     | true    |                                                                                     |
+| buying  | xxxx  | true     | false   | Aspect = Prog<br />Tense = Pres<br />VerbForm = Part                                |
+| U.K.    | X.X.  | false    | false   | NounType = Prop<br />Number = Sing                                                  |
+| startup | xxxx  | true     | false   | Number = Sing                                                                       |
+| for     | xxx   | true     | true    |                                                                                     |
+| $       | $     | false    | false   |                                                                                     |
+| 1       | d     | false    | false   | NumType = Card                                                                      |
+| billion | xxxx  | true     | false   | NumType = Card                                                                      |
 
 ### Visualizing dependency
 

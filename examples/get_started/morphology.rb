@@ -10,36 +10,36 @@ rows = []
 doc.each do |token|
   morph = token.morphology.map do |k, v|
     "#{k} = #{v}"
-  # end.join("\n")
-  end.join("<br />")
-  rows << [token.text, token.pos_, token.tag_, token.dep_, morph]
+  end.join("\n")
+  # end.join("<br />")
+  rows << [token.text, token.shape_, token.is_alpha, token.is_stop, morph]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings
 puts table
 
-# +---------+-------+----------+----------+-----------------+
-# | text    | shape | is_alpha | is_stop  | morphology      |
-# +---------+-------+----------+----------+-----------------+
-# | Apple   | PROPN | NNP      | nsubj    | NounType = Prop |
-# |         |       |          |          | Number = Sing   |
-# | is      | AUX   | VBZ      | aux      | Mood = Ind      |
-# |         |       |          |          | Number = Sing   |
-# |         |       |          |          | Person = 3      |
-# |         |       |          |          | Tense = Pres    |
-# |         |       |          |          | VerbForm = Fin  |
-# | looking | VERB  | VBG      | ROOT     | Aspect = Prog   |
-# |         |       |          |          | Tense = Pres    |
-# |         |       |          |          | VerbForm = Part |
-# | at      | ADP   | IN       | prep     |                 |
-# | buying  | VERB  | VBG      | pcomp    | Aspect = Prog   |
-# |         |       |          |          | Tense = Pres    |
-# |         |       |          |          | VerbForm = Part |
-# | U.K.    | PROPN | NNP      | dobj     | NounType = Prop |
-# |         |       |          |          | Number = Sing   |
-# | startup | NOUN  | NN       | advcl    | Number = Sing   |
-# | for     | ADP   | IN       | prep     |                 |
-# | $       | SYM   | $        | quantmod |                 |
-# | 1       | NUM   | CD       | compound | NumType = Card  |
-# | billion | NUM   | CD       | pobj     | NumType = Card  |
-# +---------+-------+----------+----------+-----------------+
+# +---------+-------+----------+---------+-----------------+
+# | text    | shape | is_alpha | is_stop | morphology      |
+# +---------+-------+----------+---------+-----------------+
+# | Apple   | Xxxxx | true     | false   | NounType = Prop |
+# |         |       |          |         | Number = Sing   |
+# | is      | xx    | true     | true    | Mood = Ind      |
+# |         |       |          |         | Number = Sing   |
+# |         |       |          |         | Person = 3      |
+# |         |       |          |         | Tense = Pres    |
+# |         |       |          |         | VerbForm = Fin  |
+# | looking | xxxx  | true     | false   | Aspect = Prog   |
+# |         |       |          |         | Tense = Pres    |
+# |         |       |          |         | VerbForm = Part |
+# | at      | xx    | true     | true    |                 |
+# | buying  | xxxx  | true     | false   | Aspect = Prog   |
+# |         |       |          |         | Tense = Pres    |
+# |         |       |          |         | VerbForm = Part |
+# | U.K.    | X.X.  | false    | false   | NounType = Prop |
+# |         |       |          |         | Number = Sing   |
+# | startup | xxxx  | true     | false   | Number = Sing   |
+# | for     | xxx   | true     | true    |                 |
+# | $       | $     | false    | false   |                 |
+# | 1       | d     | false    | false   | NumType = Card  |
+# | billion | xxxx  | true     | false   | NumType = Card  |
+# +---------+-------+----------+---------+-----------------+
