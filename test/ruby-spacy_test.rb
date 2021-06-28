@@ -147,13 +147,13 @@ class SpacyTest < Minitest::Test
     assert_empty ["senter"] - @nlp.disabled
   end
 
-  def test_get_lexeme
+  def test_language_get_lexeme
     nlp = Spacy::Language.new
     king = nlp.get_lexeme("king")
     assert_equal king.text, "king"
   end
 
-  def test_most_similar
+  def test_language_most_similar
     nlp = Spacy::Language.new("en_core_web_lg")
     tokyo = nlp.get_lexeme("Tokyo")
     japan = nlp.get_lexeme("Japan")
@@ -161,6 +161,13 @@ class SpacyTest < Minitest::Test
     query = tokyo.vector - japan.vector + france.vector
     result = nlp.most_similar(query, 10)
     assert result.collect{|r|r[:text]}.index("Paris")
+  end
+
+  def test_language_pipe
+    nlp = Spacy::Language.new("en_core_web_lg")
+    texts = ["Imagine there's no heaven", "It's easy if you try", "No hell below us", "Above us, only sky."]
+    docs = nlp.pipe(texts, disable: [], batch_size: 50)
+    assert docs.first.class.name, "Spacy::Doc"
   end
 
   # ============================

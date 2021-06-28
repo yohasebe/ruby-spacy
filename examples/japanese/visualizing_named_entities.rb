@@ -7,7 +7,7 @@ sentence ="セバスチアン・スランが2007年にグーグルで自動運�
 
 doc = nlp.read(sentence)
 
-ent_html = doc.displacy('ent')
+ent_html = doc.displacy(style: 'ent')
 
 File.open(File.join(File.dirname(__FILE__), "outputs/test_ent.html"), "w") do |file|
   file.write(ent_html)
