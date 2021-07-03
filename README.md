@@ -128,7 +128,7 @@ headings = ["text", "lemma", "pos", "tag", "dep"]
 rows = []
 
 doc.each do |token|
-  rows << [token.text, token.lemma_, token.pos_, token.tag_, token.dep_]
+  rows << [token.text, token.lemma, token.pos, token.tag, token.dep]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings
@@ -166,7 +166,7 @@ headings = ["text", "lemma", "pos", "tag", "dep"]
 rows = []
 
 doc.each do |token|
-  rows << [token.text, token.lemma_, token.pos_, token.tag_, token.dep_]
+  rows << [token.text, token.lemma, token.pos, token.tag, token.dep]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings
@@ -212,7 +212,7 @@ doc.each do |token|
   morph = token.morphology.map do |k, v|
     "#{k} = #{v}"
   end.join("\n")
-  rows << [token.text, token.shape_, token.is_alpha, token.is_stop, morph]
+  rows << [token.text, token.shape, token.is_alpha, token.is_stop, morph]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings
@@ -300,7 +300,7 @@ doc =nlp.read("Apple is looking at buying U.K. startup for $1 billion")
 rows = []
 
 doc.ents.each do |ent|
-  rows << [ent.text, ent.start_char, ent.end_char, ent.label_]
+  rows << [ent.text, ent.start_char, ent.end_char, ent.label]
 end
 
 headings = ["text", "start_char", "end_char", "label"]
@@ -332,7 +332,7 @@ doc = nlp.read(sentence)
 rows = []
 
 doc.ents.each do |ent|
-  rows << [ent.text, ent.start_char, ent.end_char, ent.label_]
+  rows << [ent.text, ent.start_char, ent.end_char, ent.label]
 end
 
 headings = ["text", "start", "end", "label"]

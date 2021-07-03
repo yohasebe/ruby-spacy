@@ -12,7 +12,7 @@ doc.each do |token|
   if token.pos_ == "VERB"
     token.children.each do |child|
       if child.dep_ == "nsubj"
-        results << child.head
+        results << child.head.text
       end
     end
   end
@@ -20,5 +20,5 @@ end
 
 puts results.to_s
 
-# [shift]
+# ["shift"]
 

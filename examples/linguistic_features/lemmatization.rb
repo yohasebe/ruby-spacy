@@ -12,7 +12,7 @@ headings = ["lemma"]
 rows = []
 
 doc.each do |token|
-  rows << [token.lemma_]
+  rows << [token.lemma]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings

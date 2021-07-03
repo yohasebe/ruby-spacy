@@ -12,7 +12,7 @@ doc.each do |token|
     "#{k} = #{v}"
   end.join("\n")
   # end.join("<br />")
-  rows << [token.text, token.shape_, token.is_alpha, token.is_stop, morph]
+  rows << [token.text, token.shape, token.is_alpha, token.is_stop, morph]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings

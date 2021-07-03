@@ -14,7 +14,8 @@ class SpacyTest < Minitest::Test
   # directly without a ruby wrapper method (hence not defined in ruby-spacy.rb)
   
   def setup
-    @nlp = Spacy::Language.new
+    @nlp = Spacy::Language.new("en_core_web_sm")
+    @nlp_lg = Spacy::Language.new("en_core_web_lg")
   end
 
   def test_doc_each
@@ -72,9 +73,8 @@ class SpacyTest < Minitest::Test
   end
 
   def test_doc_similarity
-    @nlp = Spacy::Language.new("en_core_web_lg")
-    apples = @nlp.read("I like apples")
-    oranges = @nlp.read("I like oranges")
+    apples = @nlp_lg.read("I like apples")
+    oranges = @nlp_lg.read("I like oranges")
     apples_oranges = apples.similarity(oranges)
     oranges_apples = oranges.similarity(apples)
     assert_equal apples_oranges, oranges_apples
@@ -85,7 +85,7 @@ class SpacyTest < Minitest::Test
     attrs = {LEMMA: "David Bowie"}
     doc.retokenize(2, 4, attrs = attrs)
     assert_equal doc[2].text, "David Bowie"
-    assert_equal doc[2].lemma_, "David Bowie"
+    assert_equal doc[2].lemma, "David Bowie"
   end
 
   def test_doc_retokenize_split
@@ -119,7 +119,7 @@ class SpacyTest < Minitest::Test
   def test_doc_ents
     doc = @nlp.read("Mr. Best flew to New York on Saturday morning.")
     ents = doc.ents
-    assert_equal ents[0].label_, "PERSON"
+    assert_equal ents[0].label, "PERSON"
     assert_equal ents[0].text, "Best"
   end
 
@@ -129,8 +129,7 @@ class SpacyTest < Minitest::Test
   end
 
   def test_doc_py_vector
-    nlp = Spacy::Language.new("en_core_web_lg")
-    doc = nlp.read("I like apples")
+    doc = @nlp_lg.read("I like apples")
     assert_equal doc.vector.dtype, "float32"
     assert_equal doc.vector.shape.to_s, "(300,)"
   end
@@ -154,19 +153,17 @@ class SpacyTest < Minitest::Test
   end
 
   def test_language_most_similar
-    nlp = Spacy::Language.new("en_core_web_lg")
-    tokyo = nlp.get_lexeme("Tokyo")
-    japan = nlp.get_lexeme("Japan")
-    france = nlp.get_lexeme("France")
+    tokyo = @nlp_lg.get_lexeme("Tokyo")
+    japan = @nlp_lg.get_lexeme("Japan")
+    france = @nlp_lg.get_lexeme("France")
     query = tokyo.vector - japan.vector + france.vector
-    result = nlp.most_similar(query, 10)
+    result = @nlp_lg.most_similar(query, 10)
     assert result.collect{|r|r[:text]}.index("Paris")
   end
 
   def test_language_pipe
-    nlp = Spacy::Language.new("en_core_web_lg")
     texts = ["Imagine there's no heaven", "It's easy if you try", "No hell below us", "Above us, only sky."]
-    docs = nlp.pipe(texts, disable: [], batch_size: 50)
+    docs = @nlp_lg.pipe(texts, disable: [], batch_size: 50)
     assert docs.first.class.name, "Spacy::Doc"
   end
 
@@ -346,4 +343,23 @@ class SpacyTest < Minitest::Test
     assert_equal span.label_, "US_PRESIDENT"
   end
 
+  # ============================
+  # Lexeme related methods
+  # ============================
+
+  def test_lexeme
+    doc = @nlp.read("I like New York in Autumn.")
+    token = doc.tokens[-2] # Autumn
+    lexeme_1 = token.lexeme
+    lexeme_2 = @nlp.vocab "Summer"
+    assert lexeme_1.class.name == "Spacy::Lexeme"
+    assert lexeme_2.class.name == "Spacy::Lexeme"
+  end
+
+  def test_lexeme_similarity
+    lexeme_lemon = @nlp_lg.vocab "lemon"
+    lexeme_orange = @nlp_lg.vocab "orange"
+    lexeme_book = @nlp_lg.vocab "book"
+    assert lexeme_lemon.similarity(lexeme_orange) > lexeme_lemon.similarity(lexeme_book)
+  end
 end

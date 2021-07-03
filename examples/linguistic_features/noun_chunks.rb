@@ -12,7 +12,7 @@ headings = ["text", "root.text", "root.dep", "root.head.text"]
 rows = []
 
 doc.noun_chunks.each do |chunk|
-  rows << [chunk.text, chunk.root.text, chunk.root.dep_, chunk.root.head.text]
+  rows << [chunk.text, chunk.root.text, chunk.root.dep, chunk.root.head.text]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings

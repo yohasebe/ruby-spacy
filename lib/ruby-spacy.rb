@@ -165,6 +165,9 @@ module Spacy
       # so that ents canbe "each"-ed in Ruby
       ent_array = []
       PyCall::List.(@py_doc.ents).each do |ent|
+        ent.define_singleton_method :label do
+          return self.label_
+        end
         ent_array << ent
       end
       ent_array
@@ -252,8 +255,14 @@ module Spacy
     # @param text [String] A text string representing a lexeme
     # @return [Object] Python `Lexeme` object (https://spacy.io/api/lexeme)
     def get_lexeme(text)
-      text = text.gsub("'", "\'")
       @py_nlp.vocab[text]
+    end
+
+    # Returns a ruby lexeme object
+    # @param text [String] a text string representing the vocabulary item
+    # @return [Lexeme]
+    def vocab(text)
+      Lexeme.new(@py_nlp.vocab[text])
     end
 
     # Returns _n_ lexemes having the vector representations that are the most similar to a given vector representation of a word.
@@ -386,9 +395,15 @@ module Spacy
       chunk_array = []
       py_chunks = PyCall::List.(@py_span.noun_chunks)
       py_chunks.each do |py_span|
-        chunk_array << Spacy::Span.new(@doc, py_span: py_span)
+        chunk_array << Span.new(@doc, py_span: py_span)
       end
       chunk_array
+    end
+
+    # Returns the head token
+    # @return [Token]
+    def root 
+      Token.new(@py_span.root)
     end
 
     # Returns an array of spans that represents sentences.
@@ -397,7 +412,7 @@ module Spacy
       sentence_array = []
       py_sentences = PyCall::List.(@py_span.sents)
       py_sentences.each do |py_span|
-        sentence_array << Spacy::Span.new(@doc, py_span: py_span)
+        sentence_array << Span.new(@doc, py_span: py_span)
       end
       sentence_array
     end
@@ -407,7 +422,7 @@ module Spacy
     def ents
       ent_array = []
       PyCall::List.(@py_span.ents).each do |py_span|
-        ent_array << Spacy::Span.new(@doc, py_span: py_span)
+        ent_array << Span.new(@doc, py_span: py_span)
       end
       ent_array
     end
@@ -416,7 +431,7 @@ module Spacy
     # @return [Span]
     def sent
       py_span = @py_span.sent 
-      return Spacy::Span.new(@doc, py_span: py_span)
+      return Span.new(@doc, py_span: py_span)
     end
 
     # Returns a span if a range object is given or a token if an integer representing the position of the doc is given.
@@ -424,9 +439,9 @@ module Spacy
     def [](range)
       if range.is_a?(Range)
         py_span = @py_span[range]
-        return Spacy::Span.new(@doc, start_index: py_span.start, end_index: py_span.end - 1)
+        return Span.new(@doc, start_index: py_span.start, end_index: py_span.end - 1)
       else
-        return Spacy::Token.new(@py_span[range])
+        return Token.new(@py_span[range])
       end
     end
 
@@ -440,7 +455,7 @@ module Spacy
     # Creates a document instance from the span
     # @return [Doc] 
     def as_doc
-      Spacy::Doc.new(@doc.py_nlp, text: self.text)
+      Doc.new(@doc.py_nlp, text: self.text)
     end
 
     # Returns tokens conjugated to the root of the span.
@@ -448,7 +463,7 @@ module Spacy
     def conjuncts
       conjunct_array = []
       PyCall::List.(@py_span.conjuncts).each do |py_conjunct|
-        conjunct_array << Spacy::Token.new(py_conjunct)
+        conjunct_array << Token.new(py_conjunct)
       end
       conjunct_array
     end
@@ -458,7 +473,7 @@ module Spacy
     def lefts
       left_array = []
       PyCall::List.(@py_span.lefts).each do |py_left|
-        left_array << Spacy::Token.new(py_left)
+        left_array << Token.new(py_left)
       end
       left_array
     end
@@ -468,7 +483,7 @@ module Spacy
     def rights
       right_array = []
       PyCall::List.(@py_span.rights).each do |py_right|
-        right_array << Spacy::Token.new(py_right)
+        right_array << Token.new(py_right)
       end
       right_array
     end
@@ -478,9 +493,15 @@ module Spacy
     def subtree
       subtree_array = []
       PyCall::List.(@py_span.subtree).each do |py_subtree|
-        subtree_array << Spacy::Token.new(py_subtree)
+        subtree_array << Token.new(py_subtree)
       end
       subtree_array
+    end
+
+    # Returns the label
+    # @return [String] 
+    def label
+      @py_span.label_
     end
 
     # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
@@ -506,52 +527,59 @@ module Spacy
       @text = @py_token.text
     end
 
+
+    # Returns the head token
+    # @return [Token]
+    def head 
+      Token.new(@py_token.head)
+    end
+
     # Returns the token in question and the tokens that descend from it.
-    # @return [Array<Object>] an (Ruby) array of Python `Token` objects  
+    # @return [Array<Token>] an array of tokens
     def subtree
       descendant_array = []
       PyCall::List.(@py_token.subtree).each do |descendant|
-        descendant_array << descendant
+        descendant_array << Token.new(descendant)
       end
       descendant_array
     end
 
     # Returns the token's ancestors.
-    # @return [Array<Object>] an (Ruby) array of Python `Token` objects 
+    # @return [Array<Token>] an array of tokens
     def ancestors
       ancestor_array = []
       PyCall::List.(@py_token.ancestors).each do |ancestor|
-        ancestor_array << ancestor
+        ancestor_array << Token.new(ancestor)
       end
       ancestor_array
     end
 
     # Returns a sequence of the token's immediate syntactic children.
-    # @return [Array<Object>] an (Ruby) array of Python `Token` objects  
+    # @return [Array<Token>] an array of tokens
     def children
       child_array = []
       PyCall::List.(@py_token.children).each do |child|
-        child_array << child
+        child_array << Token.new(child)
       end
       child_array
     end
 
     # The leftward immediate children of the word in the syntactic dependency parse.
-    # @return [Array<Object>] an (Ruby) array of Python `Token` objects  
+    # @return [Array<Token>] an array of tokens
     def lefts
       token_array = []
       PyCall::List.(@py_token.lefts).each do |token|
-        token_array << token
+        token_array << Token.new(token)
       end
       token_array
     end
 
     # The rightward immediate children of the word in the syntactic dependency parse.
-    # @return [Array<Object>] an (Ruby) array of Python `Token` objects  
+    # @return [Array<Token>] an array of tokens
     def rights
       token_array = []
       PyCall::List.(@py_token.rights).each do |token|
-        token_array << token
+        token_array << Token.new(token)
       end
       token_array
     end
@@ -582,12 +610,143 @@ module Spacy
       end
     end
 
+    # Returns the lemma by calling `lemma_' of `@py_token` object
+    # @return [String] 
+    def lemma
+      @py_token.lemma_
+    end
+
+    # Returns the lowercase form by calling `lower_' of `@py_token` object
+    # @return [String] 
+    def lower
+      @py_token.lower_
+    end
+
+    # Returns the shape (e.g. "Xxxxx") by calling `shape_' of `@py_token` object
+    # @return [String] 
+    def shape
+      @py_token.shape_
+    end
+
+    # Returns the pos by calling `pos_' of `@py_token` object
+    # @return [String] 
+    def pos
+      @py_token.pos_
+    end
+
+    # Returns the fine-grained pos by calling `tag_' of `@py_token` object
+    # @return [String] 
+    def tag 
+      @py_token.tag_
+    end
+
+    # Returns the dependency relation by calling `dep_' of `@py_token` object
+    # @return [String] 
+    def dep
+      @py_token.dep_
+    end
+    
+    # Returns the language by calling `lang_' of `@py_token` object
+    # @return [String] 
+    def lang 
+      @py_token.lang_
+    end
+
+    # Returns the trailing space character if present by calling `whitespace_' of `@py_token` object
+    # @return [String] 
+    def whitespace 
+      @py_token.whitespace_
+    end
+
+    # Returns the named entity type by calling `ent_type_' of `@py_token` object
+    # @return [String] 
+    def ent_type 
+      @py_token.ent_type_
+    end
+
+    # Returns a lexeme object
+    # @return [Lexeme]
+    def lexeme
+      Lexeme.new(@py_token.lex)
+    end
+
     # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
     def method_missing(name, *args)
       @py_token.send(name, *args)
     end
   end
 
+  # See also spaCy Python API document for [`Lexeme`](https://spacy.io/api/lexeme).
+  class Lexeme 
+
+    # @return [Object] a Python `Lexeme` instance accessible via `PyCall`
+    attr_reader :py_lexeme
+
+    # @return [String] a string representing the token
+    attr_reader :text
+
+    # It is recommended to use {Language#vocab} or {Token#lexeme} methods to create tokens.
+    # There is no way to generate a lexeme from scratch but relying on a pre-exising Python {Lexeme} object.
+    # @param py_lexeme [Object] Python `Lexeme` object
+    def initialize(py_lexeme)
+      @py_lexeme = py_lexeme
+      @text = @py_lexeme.text
+    end
+
+    # String representation of the token.
+    # @return [String] 
+    def to_s
+      @text
+    end
+
+    # Returns the lowercase form by calling `lower_' of `@py_lexeme` object
+    # @return [String] 
+    def lower
+      @py_lexeme.lower_
+    end
+
+    # Returns the shape (e.g. "Xxxxx") by calling `shape_' of `@py_lexeme` object
+    # @return [String] 
+    def shape
+      @py_lexeme.shape_
+    end
+
+    # Returns the language by calling `lang_' of `@py_lexeme` object
+    # @return [String] 
+    def lang 
+      @py_lexeme.lang_
+    end
+
+    # Returns the length-N substring from the start of the word by calling `prefix_' of `@py_lexeme` object
+    # @return [String] 
+    def prefix 
+      @py_lexeme.prefix_
+    end
+    #
+    # Returns the length-N substring from the end of the word by calling `suffix_' of `@py_lexeme` object
+    # @return [String] 
+    def suffix
+      @py_lexeme.suffix_
+    end
+
+    # Returns the lexemes's norm, i.e. a normalized form of the lexeme calling `norm_' of `@py_lexeme` object
+    # @return [String] 
+    def norm
+      @py_lexeme.norm_
+    end
+
+    # Returns a semantic similarity estimate.
+    # @param other [Lexeme] the other doc to which a similarity estimation is made
+    # @return [Float] 
+    def similarity(other)
+      @py_lexeme.similarity(other.py_lexeme)
+    end
+
+    # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
+    def method_missing(name, *args)
+      @py_lexeme.send(name, *args)
+    end
+  end
 
 end
 

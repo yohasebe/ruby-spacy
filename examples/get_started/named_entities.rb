@@ -8,7 +8,7 @@ headings = ["text", "start_char", "end_char", "label"]
 rows = []
 
 doc.ents.each do |ent|
-  rows << [ent.text, ent.start_char, ent.end_char, ent.label_]
+  rows << [ent.text, ent.start_char, ent.end_char, ent.label]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings

@@ -10,11 +10,11 @@ results = []
 
 doc.each do |token|
   if token.dep_ == "nsubj" && token.head.pos_ == "VERB"
-    results << token.head
+    results << token.head.text
   end
 end
 
 puts results.to_s
 
-# [shift]
+# ["shift"]
 

@@ -10,7 +10,7 @@ matches = matcher.match(doc)
 
 matches.each do |match|
   span = Spacy::Span.new(doc, start_index: match[:start_index], end_index: match[:end_index], options: {label: match[:match_id]})
-  puts span.text + " / " + span.label_
+  puts span.text + " / " + span.label
 end
 
 # Barack Obama / US_PRESIDENT

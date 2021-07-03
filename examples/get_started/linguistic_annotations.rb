@@ -8,7 +8,7 @@ headings = ["text", "pos", "dep"]
 rows = []
 
 doc.each do |token|
-  rows << [token.text, token.pos_, token.dep_]
+  rows << [token.text, token.pos, token.dep]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings

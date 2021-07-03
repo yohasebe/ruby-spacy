@@ -19,11 +19,11 @@ texts.each do |text|
   doc.each do |token|
     if token.ent_type_ == "MONEY"
       if ["attr", "dobj"].index token.dep_ 
-        subj = Spacy.generator_to_array(token.head.lefts).select{|t| t.dep_ == "nsubj"}
+        subj = Spacy.generator_to_array(token.head.lefts).select{|t| t.dep == "nsubj"}
         if !subj.empty?
           puts(subj[0].text + " --> " + token.text)
         end
-      elsif token.dep_ == "pobj" and token.head.dep_ == "prep"
+      elsif token.dep_ == "pobj" and token.head.dep == "prep"
         puts token.head.head.text + " --> " + token.text
       end
     end

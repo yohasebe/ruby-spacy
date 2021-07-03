@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.1.2 - 2021-06-26
+### Added
+- `Spacy::Lexeme` class
+
+- `Spacy::Token#morpheme` method 
 ## 0.1.3 - 2021-06-26
 - Code cleanup
 

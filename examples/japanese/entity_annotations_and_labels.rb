@@ -10,7 +10,7 @@ headings = ["text", "ent_iob", "ent_iob_", "ent_type_"]
 rows = []
 
 doc.each do |ent|
-  rows << [ent.text, ent.ent_iob, ent.ent_iob_, ent.ent_type_]
+  rows << [ent.text, ent.ent_iob, ent.ent_iob_, ent.ent_type]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings

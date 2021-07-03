@@ -24,18 +24,21 @@ puts "The subject of the sentence is: " + subject.text
 subject.subtree.each do |descendant|
   # need to convert "ancestors" object from a python generator to a ruby array
   ancestors = Spacy::generator_to_array(descendant.ancestors)
-  rows << [descendant.text, descendant.dep_, descendant.n_lefts, descendant.n_rights, ancestors]
+  rows << [descendant.text, descendant.dep, descendant.n_lefts, descendant.n_rights, ancestors.map(&:text).join(", ")]
 end
 
 table = Terminal::Table.new rows: rows, headings: headings
 print table
 
-# +----------+----------+---------+----------+------------------------------------+
-# | text     | dep      | n_lefts | n_rights | ancestors                          |
-# +----------+----------+---------+----------+------------------------------------+
-# | Credit   | nmod     | 0       | 2        | [holders, submit]                  |
-# | and      | cc       | 0       | 0        | [Credit, holders, submit]          |
-# | mortgage | compound | 0       | 0        | [account, Credit, holders, submit] |
-# | account  | conj     | 1       | 0        | [Credit, holders, submit]          |
-# | holders  | nsubj    | 1       | 0        | [submit]                           |
-# +----------+----------+---------+----------+------------------------------------+
+# The sentence: Credit and mortgage account holders must submit their requests
+# The root of the sentence is: submit
+# The subject of the sentence is: holders
+# +----------+----------+---------+----------+----------------------------------+
+# | text     | dep      | n_lefts | n_rights | ancestors                        |
+# +----------+----------+---------+----------+----------------------------------+
+# | Credit   | nmod     | 0       | 2        | holders, submit                  |
+# | and      | cc       | 0       | 0        | Credit, holders, submit          |
+# | mortgage | compound | 0       | 0        | account, Credit, holders, submit |
+# | account  | conj     | 1       | 0        | Credit, holders, submit          |
+# | holders  | nsubj    | 1       | 0        | submit                           |
+# +----------+----------+---------+----------+----------------------------------+
