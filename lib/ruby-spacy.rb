@@ -279,7 +279,15 @@ module Spacy
 
       results = []
       n.times do |i|
-        results << {key: keys[i].to_i, text: texts[i], best_row: best_rows[i], score: scores[i]}
+        result = {key: keys[i].to_i,
+                  text: texts[i],
+                  best_row: best_rows[i],
+                  score: scores[i]
+        }
+        result.each_key do |key|
+          result.define_singleton_method(key){ result[key] }
+        end
+        results << result
       end
       results
     end

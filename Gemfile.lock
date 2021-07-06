@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    ruby-spacy (0.1.4)
+    ruby-spacy (0.1.4.1)
       numpy (~> 0.4.0)
       pycall (~> 1.4.0)
       terminal-table (~> 3.0.1)
