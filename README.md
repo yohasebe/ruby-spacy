@@ -451,7 +451,7 @@ query = tokyo.vector - japan.vector + france.vector
 headings = ["rank", "text", "score"]
 rows = []
 
-results = nlp.most_similar(query, 20)
+results = nlp.most_similar(query, 10)
 results.each_with_index do |lexeme, i|
   index = (i + 1).to_s
   rows << [index, lexeme.text, lexeme.score]
@@ -501,7 +501,7 @@ query = tokyo.vector - japan.vector + france.vector
 headings = ["rank", "text", "score"]
 rows = []
 
-results = nlp.most_similar(query, 20)
+results = nlp.most_similar(query, 10)
 results.each_with_index do |lexeme, i|
   index = (i + 1).to_s
   rows << [index, lexeme.text, lexeme.score]
