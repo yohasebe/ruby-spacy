@@ -528,7 +528,7 @@ module Spacy
     attr_reader :text
 
     # It is recommended to use {Doc#tokens} or {Span#tokens} methods to create tokens.
-    # There is no way to generate a token from scratch but relying on a pre-exising Python {Token} object.
+    # There is no way to generate a token from scratch but relying on a pre-exising Python `Token` object.
     # @param py_token [Object] Python `Token` object
     def initialize(py_token)
       @py_token = py_token
@@ -744,7 +744,7 @@ module Spacy
     end
 
     # Returns a semantic similarity estimate.
-    # @param other [Lexeme] the other doc to which a similarity estimation is made
+    # @param other [Lexeme] the other lexeme to which a similarity estimation is made
     # @return [Float] 
     def similarity(other)
       @py_lexeme.similarity(other.py_lexeme)
