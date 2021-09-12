@@ -24,14 +24,14 @@ module Spacy
 
   # Python `Token` class object
   PyToken = spacy.tokens.Token
-  
+
   # Python `Matcher` class object
   PyMatcher = spacy.matcher.Matcher
 
   # Python `displacy` object
   PyDisplacy = spacy.displacy
 
-  # A utility module method to convert Python's generator object to a Ruby array, 
+  # A utility module method to convert Python's generator object to a Ruby array,
   # mainly used on the items inside the array returned from dependency-related methods
   # such as {Span#rights}, {Span#lefts} and {Span#subtree}.
   def self.generator_to_array(py_generator)
@@ -56,8 +56,8 @@ module Spacy
     alias_method :len, :count
     alias_method :size, :count
 
-    # It is recommended to use {Language#read} method to create a doc. If you need to 
-    # create one using {Doc#initialize}, there are two method signatures: 
+    # It is recommended to use {Language#read} method to create a doc. If you need to
+    # create one using {Doc#initialize}, there are two method signatures:
     # `Spacy::Doc.new(nlp_id, py_doc: Object)` and `Spacy::Doc.new(nlp_id, text: String)`.
     # @param nlp [Language] an instance of {Language} class
     # @param py_doc [Object] an instance of Python `Doc` class
@@ -84,7 +84,7 @@ module Spacy
 
     # Retokenizes the text splitting the specified token.
     # @param pos_in_doc [Integer] the position of the span to be retokenized in the document
-    # @param split_array [Array<String>] text strings of the split results 
+    # @param split_array [Array<String>] text strings of the split results
     # @param ancestor_pos [Integer] the position of the immediate ancestor element of the split elements in the document
     # @param attributes [Hash] the attributes of the split elements
     def retokenize_split(pos_in_doc, split_array, head_pos_in_split, ancestor_pos, attributes = {})
@@ -95,7 +95,7 @@ module Spacy
     end
 
     # String representation of the document.
-    # @return [String] 
+    # @return [String]
     def to_s
       @text
     end
@@ -117,7 +117,7 @@ module Spacy
       end
     end
 
-    # Returns a span of the specified range within the doc. 
+    # Returns a span of the specified range within the doc.
     # The method should be used either of the two ways: `Doc#span(range)` or `Doc#span{start_pos, size_of_span}`.
     # @param range_or_start [Range, Integer] a range object, or, alternatively, an integer that represents the start position of the span
     # @param optional_size [Integer] an integer representing the size of the span
@@ -186,7 +186,7 @@ module Spacy
 
     # Returns a semantic similarity estimate.
     # @param other [Doc] the other doc to which a similarity estimation is made
-    # @return [Float] 
+    # @return [Float]
     def similarity(other)
       py_doc.similarity(other.py_doc)
     end
@@ -297,7 +297,7 @@ module Spacy
     # @param disable [Array<String>]
     # @param batch_size [Integer]
     # @return [Array<Doc>]
-    def pipe(texts, disable: [], batch_size: 50) 
+    def pipe(texts, disable: [], batch_size: 50)
       docs = []
       PyCall::List.(@py_nlp.pipe(texts, disable: disable, batch_size: batch_size)).each do |py_doc|
         docs << Doc.new(@py_nlp, py_doc: py_doc)
@@ -364,7 +364,7 @@ module Spacy
     alias_method :len, :count
     alias_method :size, :count
 
-    # It is recommended to use {Doc#span} method to create a span. If you need to 
+    # It is recommended to use {Doc#span} method to create a span. If you need to
     # create one using {Span#initialize}, there are two method signatures:
     # `Span.new(doc, py_span: Object)` or `Span.new(doc, start_index: Integer, end_index: Integer, options: Hash)`.
     # @param doc [Doc] the document to which this span belongs to
@@ -410,7 +410,7 @@ module Spacy
 
     # Returns the head token
     # @return [Token]
-    def root 
+    def root
       Token.new(@py_span.root)
     end
 
@@ -438,7 +438,7 @@ module Spacy
     # Returns a span that represents the sentence that the given span is part of.
     # @return [Span]
     def sent
-      py_span = @py_span.sent 
+      py_span = @py_span.sent
       return Span.new(@doc, py_span: py_span)
     end
 
@@ -455,13 +455,13 @@ module Spacy
 
     # Returns a semantic similarity estimate.
     # @param other [Span] the other span to which a similarity estimation is conducted
-    # @return [Float] 
+    # @return [Float]
     def similarity(other)
       py_span.similarity(other.py_span)
     end
 
     # Creates a document instance from the span
-    # @return [Doc] 
+    # @return [Doc]
     def as_doc
       Doc.new(@doc.py_nlp, text: self.text)
     end
@@ -477,7 +477,7 @@ module Spacy
     end
 
     # Returns tokens that are to the left of the span, whose heads are within the span.
-    # @return [Array<Token>] an array of tokens  
+    # @return [Array<Token>] an array of tokens
     def lefts
       left_array = []
       PyCall::List.(@py_span.lefts).each do |py_left|
@@ -487,7 +487,7 @@ module Spacy
     end
 
     # Returns Tokens that are to the right of the span, whose heads are within the span.
-    # @return [Array<Token>] an array of Tokens  
+    # @return [Array<Token>] an array of Tokens
     def rights
       right_array = []
       PyCall::List.(@py_span.rights).each do |py_right|
@@ -497,7 +497,7 @@ module Spacy
     end
 
     # Returns Tokens that are within the span and tokens that descend from them.
-    # @return [Array<Token>] an array of tokens  
+    # @return [Array<Token>] an array of tokens
     def subtree
       subtree_array = []
       PyCall::List.(@py_span.subtree).each do |py_subtree|
@@ -507,7 +507,7 @@ module Spacy
     end
 
     # Returns the label
-    # @return [String] 
+    # @return [String]
     def label
       @py_span.label_
     end
@@ -538,7 +538,7 @@ module Spacy
 
     # Returns the head token
     # @return [Token]
-    def head 
+    def head
       Token.new(@py_token.head)
     end
 
@@ -593,18 +593,18 @@ module Spacy
     end
 
     # String representation of the token.
-    # @return [String] 
+    # @return [String]
     def to_s
       @text
     end
 
     # Returns a hash or string of morphological information
     # @param hash [Boolean] if true, a hash will be returned instead of a string
-    # @return [Hash, String] 
+    # @return [Hash, String]
     def morphology(hash = true)
       if @py_token.has_morph
         morph_analysis = @py_token.morph
-        if hash 
+        if hash
           return morph_analysis.to_dict
         else
           return morph_analysis.to_s
@@ -619,56 +619,56 @@ module Spacy
     end
 
     # Returns the lemma by calling `lemma_' of `@py_token` object
-    # @return [String] 
+    # @return [String]
     def lemma
       @py_token.lemma_
     end
 
     # Returns the lowercase form by calling `lower_' of `@py_token` object
-    # @return [String] 
+    # @return [String]
     def lower
       @py_token.lower_
     end
 
     # Returns the shape (e.g. "Xxxxx") by calling `shape_' of `@py_token` object
-    # @return [String] 
+    # @return [String]
     def shape
       @py_token.shape_
     end
 
     # Returns the pos by calling `pos_' of `@py_token` object
-    # @return [String] 
+    # @return [String]
     def pos
       @py_token.pos_
     end
 
     # Returns the fine-grained pos by calling `tag_' of `@py_token` object
-    # @return [String] 
-    def tag 
+    # @return [String]
+    def tag
       @py_token.tag_
     end
 
     # Returns the dependency relation by calling `dep_' of `@py_token` object
-    # @return [String] 
+    # @return [String]
     def dep
       @py_token.dep_
     end
-    
+
     # Returns the language by calling `lang_' of `@py_token` object
-    # @return [String] 
-    def lang 
+    # @return [String]
+    def lang
       @py_token.lang_
     end
 
     # Returns the trailing space character if present by calling `whitespace_' of `@py_token` object
-    # @return [String] 
-    def whitespace 
+    # @return [String]
+    def whitespace
       @py_token.whitespace_
     end
 
     # Returns the named entity type by calling `ent_type_' of `@py_token` object
-    # @return [String] 
-    def ent_type 
+    # @return [String]
+    def ent_type
       @py_token.ent_type_
     end
 
@@ -685,7 +685,7 @@ module Spacy
   end
 
   # See also spaCy Python API document for [`Lexeme`](https://spacy.io/api/lexeme).
-  class Lexeme 
+  class Lexeme
 
     # @return [Object] a Python `Lexeme` instance accessible via `PyCall`
     attr_reader :py_lexeme
@@ -702,50 +702,50 @@ module Spacy
     end
 
     # String representation of the token.
-    # @return [String] 
+    # @return [String]
     def to_s
       @text
     end
 
     # Returns the lowercase form by calling `lower_' of `@py_lexeme` object
-    # @return [String] 
+    # @return [String]
     def lower
       @py_lexeme.lower_
     end
 
     # Returns the shape (e.g. "Xxxxx") by calling `shape_' of `@py_lexeme` object
-    # @return [String] 
+    # @return [String]
     def shape
       @py_lexeme.shape_
     end
 
     # Returns the language by calling `lang_' of `@py_lexeme` object
-    # @return [String] 
-    def lang 
+    # @return [String]
+    def lang
       @py_lexeme.lang_
     end
 
     # Returns the length-N substring from the start of the word by calling `prefix_' of `@py_lexeme` object
-    # @return [String] 
-    def prefix 
+    # @return [String]
+    def prefix
       @py_lexeme.prefix_
     end
     #
     # Returns the length-N substring from the end of the word by calling `suffix_' of `@py_lexeme` object
-    # @return [String] 
+    # @return [String]
     def suffix
       @py_lexeme.suffix_
     end
 
     # Returns the lexemes's norm, i.e. a normalized form of the lexeme calling `norm_' of `@py_lexeme` object
-    # @return [String] 
+    # @return [String]
     def norm
       @py_lexeme.norm_
     end
 
     # Returns a semantic similarity estimate.
     # @param other [Lexeme] the other lexeme to which a similarity estimation is made
-    # @return [Float] 
+    # @return [Float]
     def similarity(other)
       @py_lexeme.similarity(other.py_lexeme)
     end
@@ -757,4 +757,3 @@ module Spacy
   end
 
 end
-

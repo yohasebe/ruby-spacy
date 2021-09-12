@@ -1,4 +1,4 @@
-# ruby-spacy
+# 💎 ruby-spacy
 
 ⚠️  This project is **work-in-progress** and is provided as-is. There may be breaking changes committed to this repository without notice.
 
@@ -541,4 +541,3 @@ I would like to thank the following open source projects and their creators for 
 ## License
 
 This library is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
-
