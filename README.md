@@ -16,22 +16,22 @@
 
 ## Installation of prerequisites
 
-Make sure that the `enable-shared` option is enabled in your Python installation. You can use [pyenv](https://github.com/pyenv/pyenv) to install any version of Python you like. Install Python 3.8.5, for instance, using pyenv with `enable-shared` as follows:
+Make sure that the `enable-shared` option is enabled in your Python installation. You can use [pyenv](https://github.com/pyenv/pyenv) to install any version of Python you like. Install Python 3.10.6, for instance, using pyenv with `enable-shared` as follows:
 
 ```shell
-$ env CONFIGURE_OPTS="--enable-shared" pyenv install 3.8.5
+$ env CONFIGURE_OPTS="--enable-shared" pyenv install 3.10.6
 ```
 
 Don't forget to make it accessible from your working directory.
 
 ```shell
-$ pyenv local 3.8.5 
+$ pyenv local 3.10.6 
 ```
 
 Or alternatively:
 
 ```shell
-$ pyenv global 3.8.5 
+$ pyenv global 3.10.6 
 ```
 
 Then, install [spaCy](https://spacy.io/). If you use `pip`, the following command will do:
