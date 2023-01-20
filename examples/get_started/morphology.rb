@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("Apple is looking at buying U.K. startup for $1 billion")
 
-headings = ["text", "shape", "is_alpha", "is_stop", "morphology"]
+headings = %w[text shape is_alpha is_stop morphology]
 rows = []
 
 doc.each do |token|

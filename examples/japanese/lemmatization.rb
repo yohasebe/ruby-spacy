@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 require "terminal-table"
 
@@ -5,7 +7,7 @@ nlp = Spacy::Language.new("ja_core_news_sm")
 
 doc = nlp.read("私は論文を読んでいるところだった。")
 
-headings = ["text", "lemma"]
+headings = %w[text lemma]
 rows = []
 
 doc.each do |token|

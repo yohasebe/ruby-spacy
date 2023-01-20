@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 require "terminal-table"
 
@@ -10,21 +12,19 @@ sentence = "Credit and mortgage account holders must submit their requests"
 doc = nlp.read(sentence)
 
 texts = [
-    "Net income was $9.4 million compared to the prior year of $2.7 million.",
-    "Revenue exceeded twelve billion dollars, with a loss of $1b.",
+  "Net income was $9.4 million compared to the prior year of $2.7 million.",
+  "Revenue exceeded twelve billion dollars, with a loss of $1b."
 ]
 
 texts.each do |text|
   doc = nlp.read(text)
   doc.each do |token|
     if token.ent_type_ == "MONEY"
-      if ["attr", "dobj"].index token.dep_ 
-        subj = Spacy.generator_to_array(token.head.lefts).select{|t| t.dep == "nsubj"}
-        if !subj.empty?
-          puts(subj[0].text + " --> " + token.text)
-        end
-      elsif token.dep_ == "pobj" and token.head.dep == "prep"
-        puts token.head.head.text + " --> " + token.text
+      if %w[attr dobj].index token.dep_
+        subj = Spacy.generator_to_array(token.head.lefts).select { |t| t.dep == "nsubj" }
+        puts("#{subj[0].text}  --> #{token.text}") unless subj.empty?
+      elsif token.dep_ == "pobj" && token.head.dep == "prep"
+        puts "#{token.head.head.text} --> #{token.text}"
       end
     end
   end

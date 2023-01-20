@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.1.5.0 - 2023-0120-
+- Rubocop code style guide introduced
+
 ## 0.1.4.1 - 2021-07-06
 - Test code refined
 - `Spacy::Language::most_similar` returns an array of hash-based objects that accepts method calls

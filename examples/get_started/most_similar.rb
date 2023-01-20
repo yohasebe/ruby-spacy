@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 require "terminal-table"
 
@@ -9,7 +11,7 @@ france = nlp.get_lexeme("France")
 
 query = tokyo.vector - japan.vector + france.vector
 
-headings = ["rank", "text", "score"]
+headings = %w[rank text score]
 rows = []
 
 results = nlp.most_similar(query, 20)

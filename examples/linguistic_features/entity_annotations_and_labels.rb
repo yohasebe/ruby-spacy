@@ -1,12 +1,14 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
 
-sentence = "San Francisco considers banning sidewalk delivery robots" 
+sentence = "San Francisco considers banning sidewalk delivery robots"
 doc = nlp.read(sentence)
 
-headings = ["text", "ent_iob", "ent_iob_", "ent_type_"]
+headings = %w[text ent_iob ent_iob_ ent_type_]
 rows = []
 
 doc.each do |ent|

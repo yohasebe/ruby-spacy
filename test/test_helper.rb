@@ -2,11 +2,6 @@
 
 $VERBOSE = false
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
-
-require "ruby-spacy"
+require_relative "../lib/ruby-spacy"
 
 require "minitest/autorun"
-
-
-

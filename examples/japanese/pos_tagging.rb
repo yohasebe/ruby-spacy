@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("ja_core_news_lg")
 doc = nlp.read("任天堂は1983年にファミコンを14,800円で発売した。")
 
-headings = ["text", "lemma", "pos", "tag", "dep"]
+headings = %w[text lemma pos tag dep]
 rows = []
 
 doc.each do |token|

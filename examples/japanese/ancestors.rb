@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 require "terminal-table"
 
@@ -6,7 +8,7 @@ nlp = Spacy::Language.new("ja_core_news_lg")
 sentence = "私の父は寿司が好きだ。"
 doc = nlp.read(sentence)
 
-headings = ["text", "dep", "n_lefts", "n_rights", "ancestors"]
+headings = %w[text dep n_lefts n_rights ancestors]
 rows = []
 
 root = doc.tokens.select do |t|
@@ -14,13 +16,13 @@ root = doc.tokens.select do |t|
   t.i == t.head.i
 end.first
 
-puts "The sentence: " + sentence
+puts "The sentence: #{sentence}"
 
 # subject = Spacy::Token.new(root.lefts[0])
 subject = Spacy::Token.new(root.lefts[0])
 
-puts "The root of the sentence is: " + root.text
-puts "The subject of the sentence is: " + subject.text
+puts "The root of the sentence is: #{root.text}"
+puts "The subject of the sentence is: #{subject.text}"
 
 subject.subtree.each do |descendant|
   rows << [descendant.text, descendant.dep, descendant.n_lefts, descendant.n_rights, descendant.ancestors.map(&:text).join(", ")]

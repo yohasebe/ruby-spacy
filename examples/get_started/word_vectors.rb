@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_lg")
 doc = nlp.read("dog cat banana afskfsd")
 
-headings = ["text", "has_vector", "vector_norm", "is_oov"]
+headings = %w[text has_vector vector_norm is_oov]
 rows = []
 
 doc.each do |token|

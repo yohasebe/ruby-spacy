@@ -1,12 +1,14 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("ja_core_news_lg")
 
-sentence = "同志社大学は日本の京都にある私立大学で、新島襄という人物が創立しました。" 
+sentence = "同志社大学は日本の京都にある私立大学で、新島襄という人物が創立しました。"
 doc = nlp.read(sentence)
 
-headings = ["text", "ent_iob", "ent_iob_", "ent_type_"]
+headings = %w[text ent_iob ent_iob_ ent_type_]
 rows = []
 
 doc.each do |ent|

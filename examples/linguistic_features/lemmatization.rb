@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
 
 lemmatizer = nlp.get_pipe("lemmatizer")
-puts "Lemmatizer mode: " + lemmatizer.mode
+puts "Lemmatizer mode: #{lemmatizer.mode}"
 
 doc = nlp.read("I was reading the paper.")
 

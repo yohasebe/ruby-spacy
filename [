@@ -12,7 +12,7 @@ puts "Before: #{doc.tokens.map(&:text).join(", ")}"
 
 doc.retokenize(3, 4)
 
-puts "After: #{doc.tokens.map(&:text).join(", ")}"
+puts "After: " + doc.tokens.map(&:text).join(", ")
 
 # Before: I, live, in, New, York
 # After: I, live, in, New York

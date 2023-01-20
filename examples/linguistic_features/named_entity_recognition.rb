@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 require "terminal-table"
 
@@ -6,7 +8,7 @@ nlp = Spacy::Language.new("en_core_web_sm")
 sentence = "Apple is looking at buying U.K. startup for $1 billion"
 doc = nlp.read(sentence)
 
-headings = ["text", "start", "end", "label"]
+headings = %w[text start end label]
 rows = []
 
 doc.ents.each do |ent|

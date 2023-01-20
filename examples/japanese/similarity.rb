@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 
 nlp = Spacy::Language.new("ja_core_news_lg")

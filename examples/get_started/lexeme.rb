@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 require "terminal-table"
 
 nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("I love coffee")
 
-headings = ["text", "shape", "prefix", "suffix", "is_alpha", "is_digit"]
+headings = %w[text shape prefix suffix is_alpha is_digit]
 rows = []
 
 doc.each do |word|

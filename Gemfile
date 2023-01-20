@@ -5,14 +5,14 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in ruby-spacy.gemspec
 gemspec
 
-gem 'pycall'
-gem 'numpy'
-gem 'terminal-table'
+gem "numpy"
+gem "pycall"
+gem "terminal-table"
 
 group :development do
-  gem "rake", "~> 13.0"
+  gem "github-markup"
   gem "minitest", "~> 5.0"
-  gem 'yard'
-  gem 'redcarpet'
-  gem 'github-markup'
+  gem "rake", "~> 13.0"
+  gem "redcarpet"
+  gem "yard"
 end

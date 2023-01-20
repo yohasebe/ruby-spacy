@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "ruby-spacy"
 
 nlp = Spacy::Language.new("en_core_web_sm")
