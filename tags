@@ -1,0 +1,132 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+Doc	lib/ruby-spacy.rb	/^  class Doc$/;"	c	class:Spacy
+Language	lib/ruby-spacy.rb	/^  class Language$/;"	c	class:Spacy
+Lexeme	lib/ruby-spacy.rb	/^  class Lexeme$/;"	c	class:Spacy
+Matcher	lib/ruby-spacy.rb	/^  class Matcher$/;"	c	class:Spacy
+Spacy	lib/ruby-spacy.rb	/^module Spacy$/;"	m
+Spacy	lib/ruby-spacy/version.rb	/^module Spacy$/;"	m
+SpacyTest	test/ruby-spacy_test.rb	/^class SpacyTest < Minitest::Test$/;"	c
+Span	lib/ruby-spacy.rb	/^  class Span$/;"	c	class:Spacy
+Token	lib/ruby-spacy.rb	/^  class Token$/;"	c	class:Spacy
+[]	lib/ruby-spacy.rb	/^    def [](range)$/;"	f	class:Spacy.Doc
+[]	lib/ruby-spacy.rb	/^    def [](range)$/;"	f	class:Spacy.Span
+add	lib/ruby-spacy.rb	/^    def add(text, pattern)$/;"	f	class:Spacy.Matcher
+ancestors	lib/ruby-spacy.rb	/^    def ancestors$/;"	f	class:Spacy.Token
+as_doc	lib/ruby-spacy.rb	/^    def as_doc$/;"	f	class:Spacy.Span
+children	lib/ruby-spacy.rb	/^    def children$/;"	f	class:Spacy.Token
+conjuncts	lib/ruby-spacy.rb	/^    def conjuncts$/;"	f	class:Spacy.Span
+dep	lib/ruby-spacy.rb	/^    def dep$/;"	f	class:Spacy.Token
+displacy	lib/ruby-spacy.rb	/^    def displacy(style: "dep", compact: false)$/;"	f	class:Spacy.Doc
+each	lib/ruby-spacy.rb	/^    def each$/;"	f	class:Spacy.Doc
+each	lib/ruby-spacy.rb	/^    def each$/;"	f	class:Spacy.Span
+ent_type	lib/ruby-spacy.rb	/^    def ent_type$/;"	f	class:Spacy.Token
+ents	lib/ruby-spacy.rb	/^    def ents$/;"	f	class:Spacy.Doc
+ents	lib/ruby-spacy.rb	/^    def ents$/;"	f	class:Spacy.Span
+generator_to_array	lib/ruby-spacy.rb	/^  def self.generator_to_array(py_generator)$/;"	F	class:Spacy
+get_lexeme	lib/ruby-spacy.rb	/^    def get_lexeme(text)$/;"	f	class:Spacy.Language
+head	lib/ruby-spacy.rb	/^    def head$/;"	f	class:Spacy.Token
+initialize	lib/ruby-spacy.rb	/^    def initialize(doc, py_span: nil, start_index: nil, end_index: nil, options: {})$/;"	f	class:Spacy.Span
+initialize	lib/ruby-spacy.rb	/^    def initialize(model = "en_core_web_sm")$/;"	f	class:Spacy.Language
+initialize	lib/ruby-spacy.rb	/^    def initialize(nlp)$/;"	f	class:Spacy.Matcher
+initialize	lib/ruby-spacy.rb	/^    def initialize(nlp, py_doc: nil, text: nil)$/;"	f	class:Spacy.Doc
+initialize	lib/ruby-spacy.rb	/^    def initialize(py_lexeme)$/;"	f	class:Spacy.Lexeme
+initialize	lib/ruby-spacy.rb	/^    def initialize(py_token)$/;"	f	class:Spacy.Token
+label	lib/ruby-spacy.rb	/^    def label$/;"	f	class:Spacy.Span
+lang	lib/ruby-spacy.rb	/^    def lang$/;"	f	class:Spacy.Lexeme
+lang	lib/ruby-spacy.rb	/^    def lang$/;"	f	class:Spacy.Token
+lefts	lib/ruby-spacy.rb	/^    def lefts$/;"	f	class:Spacy.Span
+lefts	lib/ruby-spacy.rb	/^    def lefts$/;"	f	class:Spacy.Token
+lemma	lib/ruby-spacy.rb	/^    def lemma$/;"	f	class:Spacy.Token
+lexeme	lib/ruby-spacy.rb	/^    def lexeme$/;"	f	class:Spacy.Token
+lower	lib/ruby-spacy.rb	/^    def lower$/;"	f	class:Spacy.Lexeme
+lower	lib/ruby-spacy.rb	/^    def lower$/;"	f	class:Spacy.Token
+match	lib/ruby-spacy.rb	/^    def match(doc)$/;"	f	class:Spacy.Matcher
+matcher	lib/ruby-spacy.rb	/^    def matcher$/;"	f	class:Spacy.Language
+method_missing	lib/ruby-spacy.rb	/^    def method_missing(name, *args)$/;"	f	class:Spacy.Doc
+method_missing	lib/ruby-spacy.rb	/^    def method_missing(name, *args)$/;"	f	class:Spacy.Language
+method_missing	lib/ruby-spacy.rb	/^    def method_missing(name, *args)$/;"	f	class:Spacy.Lexeme
+method_missing	lib/ruby-spacy.rb	/^    def method_missing(name, *args)$/;"	f	class:Spacy.Span
+method_missing	lib/ruby-spacy.rb	/^    def method_missing(name, *args)$/;"	f	class:Spacy.Token
+morphology	lib/ruby-spacy.rb	/^    def morphology(hash = true)$/;"	f	class:Spacy.Token
+most_similar	lib/ruby-spacy.rb	/^    def most_similar(vector, n)$/;"	f	class:Spacy.Language
+norm	lib/ruby-spacy.rb	/^    def norm$/;"	f	class:Spacy.Lexeme
+noun_chunks	lib/ruby-spacy.rb	/^    def noun_chunks$/;"	f	class:Spacy.Doc
+noun_chunks	lib/ruby-spacy.rb	/^    def noun_chunks$/;"	f	class:Spacy.Span
+pipe	lib/ruby-spacy.rb	/^    def pipe(texts, disable: [], batch_size: 50)$/;"	f	class:Spacy.Language
+pipe_names	lib/ruby-spacy.rb	/^    def pipe_names$/;"	f	class:Spacy.Language
+pos	lib/ruby-spacy.rb	/^    def pos$/;"	f	class:Spacy.Token
+prefix	lib/ruby-spacy.rb	/^    def prefix$/;"	f	class:Spacy.Lexeme
+read	lib/ruby-spacy.rb	/^    def read(text)$/;"	f	class:Spacy.Language
+retokenize	lib/ruby-spacy.rb	/^    def retokenize(start_index, end_index, attributes = {})$/;"	f	class:Spacy.Doc
+retokenize_split	lib/ruby-spacy.rb	/^    def retokenize_split(pos_in_doc, split_array, head_pos_in_split, ancestor_pos, attributes = {})$/;"	f	class:Spacy.Doc
+rights	lib/ruby-spacy.rb	/^    def rights$/;"	f	class:Spacy.Span
+rights	lib/ruby-spacy.rb	/^    def rights$/;"	f	class:Spacy.Token
+root	lib/ruby-spacy.rb	/^    def root$/;"	f	class:Spacy.Span
+sent	lib/ruby-spacy.rb	/^    def sent$/;"	f	class:Spacy.Span
+sents	lib/ruby-spacy.rb	/^    def sents$/;"	f	class:Spacy.Doc
+sents	lib/ruby-spacy.rb	/^    def sents$/;"	f	class:Spacy.Span
+shape	lib/ruby-spacy.rb	/^    def shape$/;"	f	class:Spacy.Lexeme
+shape	lib/ruby-spacy.rb	/^    def shape$/;"	f	class:Spacy.Token
+similarity	lib/ruby-spacy.rb	/^    def similarity(other)$/;"	f	class:Spacy.Doc
+similarity	lib/ruby-spacy.rb	/^    def similarity(other)$/;"	f	class:Spacy.Lexeme
+similarity	lib/ruby-spacy.rb	/^    def similarity(other)$/;"	f	class:Spacy.Span
+span	lib/ruby-spacy.rb	/^    def span(range_or_start, optional_size = nil)$/;"	f	class:Spacy.Doc
+subtree	lib/ruby-spacy.rb	/^    def subtree$/;"	f	class:Spacy.Span
+subtree	lib/ruby-spacy.rb	/^    def subtree$/;"	f	class:Spacy.Token
+suffix	lib/ruby-spacy.rb	/^    def suffix$/;"	f	class:Spacy.Lexeme
+tag	lib/ruby-spacy.rb	/^    def tag$/;"	f	class:Spacy.Token
+test_doc_each	test/ruby-spacy_test.rb	/^  def test_doc_each$/;"	f	class:SpacyTest
+test_doc_ents	test/ruby-spacy_test.rb	/^  def test_doc_ents$/;"	f	class:SpacyTest
+test_doc_iteration	test/ruby-spacy_test.rb	/^  def test_doc_iteration$/;"	f	class:SpacyTest
+test_doc_len	test/ruby-spacy_test.rb	/^  def test_doc_len$/;"	f	class:SpacyTest
+test_doc_noun_chunks	test/ruby-spacy_test.rb	/^  def test_doc_noun_chunks$/;"	f	class:SpacyTest
+test_doc_py_char_span	test/ruby-spacy_test.rb	/^  def test_doc_py_char_span$/;"	f	class:SpacyTest
+test_doc_py_has_vector	test/ruby-spacy_test.rb	/^  def test_doc_py_has_vector$/;"	f	class:SpacyTest
+test_doc_py_vector	test/ruby-spacy_test.rb	/^  def test_doc_py_vector$/;"	f	class:SpacyTest
+test_doc_retokenize	test/ruby-spacy_test.rb	/^  def test_doc_retokenize$/;"	f	class:SpacyTest
+test_doc_retokenize_split	test/ruby-spacy_test.rb	/^  def test_doc_retokenize_split$/;"	f	class:SpacyTest
+test_doc_sents	test/ruby-spacy_test.rb	/^  def test_doc_sents$/;"	f	class:SpacyTest
+test_doc_similarity	test/ruby-spacy_test.rb	/^  def test_doc_similarity$/;"	f	class:SpacyTest
+test_doc_slice	test/ruby-spacy_test.rb	/^  def test_doc_slice$/;"	f	class:SpacyTest
+test_doc_span	test/ruby-spacy_test.rb	/^  def test_doc_span$/;"	f	class:SpacyTest
+test_language_disable_pipes	test/ruby-spacy_test.rb	/^  def test_language_disable_pipes$/;"	f	class:SpacyTest
+test_language_get_lexeme	test/ruby-spacy_test.rb	/^  def test_language_get_lexeme$/;"	f	class:SpacyTest
+test_language_most_similar	test/ruby-spacy_test.rb	/^  def test_language_most_similar$/;"	f	class:SpacyTest
+test_language_pipe	test/ruby-spacy_test.rb	/^  def test_language_pipe$/;"	f	class:SpacyTest
+test_lexeme	test/ruby-spacy_test.rb	/^  def test_lexeme$/;"	f	class:SpacyTest
+test_lexeme_similarity	test/ruby-spacy_test.rb	/^  def test_lexeme_similarity$/;"	f	class:SpacyTest
+test_matcher_match	test/ruby-spacy_test.rb	/^  def test_matcher_match$/;"	f	class:SpacyTest
+test_span_as_doc	test/ruby-spacy_test.rb	/^  def test_span_as_doc$/;"	f	class:SpacyTest
+test_span_conjuncts	test/ruby-spacy_test.rb	/^  def test_span_conjuncts$/;"	f	class:SpacyTest
+test_span_each	test/ruby-spacy_test.rb	/^  def test_span_each$/;"	f	class:SpacyTest
+test_span_ents	test/ruby-spacy_test.rb	/^  def test_span_ents$/;"	f	class:SpacyTest
+test_span_lefts	test/ruby-spacy_test.rb	/^  def test_span_lefts$/;"	f	class:SpacyTest
+test_span_noun_chunks	test/ruby-spacy_test.rb	/^  def test_span_noun_chunks$/;"	f	class:SpacyTest
+test_span_py_root	test/ruby-spacy_test.rb	/^  def test_span_py_root$/;"	f	class:SpacyTest
+test_span_rights	test/ruby-spacy_test.rb	/^  def test_span_rights$/;"	f	class:SpacyTest
+test_span_sent	test/ruby-spacy_test.rb	/^  def test_span_sent$/;"	f	class:SpacyTest
+test_span_similarity	test/ruby-spacy_test.rb	/^  def test_span_similarity$/;"	f	class:SpacyTest
+test_span_size	test/ruby-spacy_test.rb	/^  def test_span_size$/;"	f	class:SpacyTest
+test_span_slice	test/ruby-spacy_test.rb	/^  def test_span_slice$/;"	f	class:SpacyTest
+test_span_subtree	test/ruby-spacy_test.rb	/^  def test_span_subtree$/;"	f	class:SpacyTest
+test_that_it_has_a_version_number	test/ruby-spacy_test.rb	/^  def test_that_it_has_a_version_number$/;"	f	class:SpacyTest
+test_token_ancestors	test/ruby-spacy_test.rb	/^  def test_token_ancestors$/;"	f	class:SpacyTest
+test_token_children	test/ruby-spacy_test.rb	/^  def test_token_children$/;"	f	class:SpacyTest
+test_token_lefts	test/ruby-spacy_test.rb	/^  def test_token_lefts$/;"	f	class:SpacyTest
+test_token_method_missing	test/ruby-spacy_test.rb	/^  def test_token_method_missing$/;"	f	class:SpacyTest
+test_token_morph	test/ruby-spacy_test.rb	/^  def test_token_morph$/;"	f	class:SpacyTest
+test_token_rights	test/ruby-spacy_test.rb	/^  def test_token_rights$/;"	f	class:SpacyTest
+test_token_subtree	test/ruby-spacy_test.rb	/^  def test_token_subtree$/;"	f	class:SpacyTest
+to_s	lib/ruby-spacy.rb	/^    def to_s$/;"	f	class:Spacy.Doc
+to_s	lib/ruby-spacy.rb	/^    def to_s$/;"	f	class:Spacy.Lexeme
+to_s	lib/ruby-spacy.rb	/^    def to_s$/;"	f	class:Spacy.Token
+tokens	lib/ruby-spacy.rb	/^    def tokens$/;"	f	class:Spacy.Doc
+tokens	lib/ruby-spacy.rb	/^    def tokens$/;"	f	class:Spacy.Span
+vocab	lib/ruby-spacy.rb	/^    def vocab(text)$/;"	f	class:Spacy.Language
+vocab_string_lookup	lib/ruby-spacy.rb	/^    def vocab_string_lookup(id)$/;"	f	class:Spacy.Language
+whitespace	lib/ruby-spacy.rb	/^    def whitespace$/;"	f	class:Spacy.Token
