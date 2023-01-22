@@ -3,11 +3,12 @@
 require_relative "ruby-spacy/version"
 require "strscan"
 require "numpy"
-require "pycall/import"
+require "pycall"
 
 # This module covers the areas of spaCy functionality for _using_ many varieties of its language models, not for _building_ ones.
 module Spacy
-  extend PyCall::Import
+  MAX_RETRIAL = 20
+
   spacy = PyCall.import_module("spacy")
 
   # Python `Language` class
@@ -211,10 +212,16 @@ module Spacy
 
     # Creates a language model instance, which is conventionally referred to by a variable named `nlp`.
     # @param model [String] A language model installed in the system
-    def initialize(model = "en_core_web_sm")
+    def initialize(model = "en_core_web_sm", max_retrial = MAX_RETRIAL, retrial = 0)
       @spacy_nlp_id = "nlp_#{model.object_id}"
       PyCall.exec("import spacy; #{@spacy_nlp_id} = spacy.load('#{model}')")
       @py_nlp = PyCall.eval(@spacy_nlp_id)
+    rescue StandardError
+      retrial += 1
+      raise "Error: Pycall failed to load Spacy" unless retrial <= max_retrial
+
+      sleep 0.5
+      initialize(model, max_retrial, retrial)
     end
 
     # Reads and analyze the given text.
