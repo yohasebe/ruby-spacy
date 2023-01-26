@@ -59,10 +59,16 @@ module Spacy
     # @param nlp [Language] an instance of {Language} class
     # @param py_doc [Object] an instance of Python `Doc` class
     # @param text [String] the text string to be analyzed
-    def initialize(nlp, py_doc: nil, text: nil)
+    def initialize(nlp, py_doc: nil, text: nil, max_retrial: MAX_RETRIAL, retrial: 0)
       @py_nlp = nlp
       @py_doc = py_doc || @py_doc = nlp.call(text)
       @text = @py_doc.text
+    rescue StandardError
+      retrial += 1
+      raise "Error: Failed to construct a Doc object" unless retrial <= max_retrial
+
+      sleep 0.5
+      initialize(nlp, py_doc: py_doc, text: text, max_retrial: max_retrial, retrial: retrial)
     end
 
     # Retokenizes the text merging a span into a single token.
@@ -212,7 +218,7 @@ module Spacy
 
     # Creates a language model instance, which is conventionally referred to by a variable named `nlp`.
     # @param model [String] A language model installed in the system
-    def initialize(model = "en_core_web_sm", max_retrial = MAX_RETRIAL, retrial = 0)
+    def initialize(model = "en_core_web_sm", max_retrial: MAX_RETRIAL, retrial: 0)
       @spacy_nlp_id = "nlp_#{model.object_id}"
       PyCall.exec("import spacy; #{@spacy_nlp_id} = spacy.load('#{model}')")
       @py_nlp = PyCall.eval(@spacy_nlp_id)
@@ -221,7 +227,7 @@ module Spacy
       raise "Error: Pycall failed to load Spacy" unless retrial <= max_retrial
 
       sleep 0.5
-      initialize(model, max_retrial, retrial)
+      initialize(model, max_retrial: max_retrial, retrial: retrial)
     end
 
     # Reads and analyze the given text.
