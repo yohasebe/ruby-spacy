@@ -7,7 +7,7 @@ require "pycall"
 
 # This module covers the areas of spaCy functionality for _using_ many varieties of its language models, not for _building_ ones.
 module Spacy
-  MAX_RETRIAL = 20
+  MAX_RETRIAL = 5
 
   spacy = PyCall.import_module("spacy")
 
