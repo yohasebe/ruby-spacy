@@ -20,13 +20,7 @@
 $ env CONFIGURE_OPTS="--enable-shared" pyenv install 3.10.6
 ```
 
-Don't forget to make it accessible from your working directory.
-
-```shell
-$ pyenv local 3.10.6 
-```
-
-Or alternatively:
+Remember to make it accessible from your working directory. It is recommended that you set `global` to the version of python you just installed.
 
 ```shell
 $ pyenv global 3.10.6 

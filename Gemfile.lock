@@ -1,9 +1,9 @@
 PATH
   remote: .
   specs:
-    ruby-spacy (0.1.5.3)
-      numpy (~> 0.4.0)
-      pycall (~> 1.4.0)
+    ruby-spacy (0.1.5.4)
+      numpy
+      pycall
       terminal-table (~> 3.0.1)
 
 GEM
@@ -42,7 +42,7 @@ GEM
     regexp_parser (2.8.1)
     reverse_markdown (2.1.1)
       nokogiri
-    rexml (3.2.5)
+    rexml (3.2.6)
     rspec (3.12.0)
       rspec-core (~> 3.12.0)
       rspec-expectations (~> 3.12.0)
