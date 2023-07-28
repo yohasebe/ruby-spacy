@@ -12,6 +12,10 @@
 | ✅ | Syntactic dependency visualization                 |
 | ✅ | Access to pre-trained word vectors                 |
 
+Current Version: `0.1.5.4`
+
+- Addressed installation issues in some environments
+
 ## Installation of prerequisites
 
 **IMPORTANT**: Make sure that the `enable-shared` option is enabled in your Python installation. You can use [pyenv](https://github.com/pyenv/pyenv) to install any version of Python you like. Install Python 3.10.6, for instance, using pyenv with `enable-shared` as follows:
