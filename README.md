@@ -523,7 +523,7 @@ Output:
 
 ## OpenAI API Integration
 
-Easily leverage GPT models within ruby-spacy by using an OpenAI API key. When constructing prompts for the Doc::openai_query method, you can incorporate various token properties from the document. These properties can be retrieved through function calls and seamlessly integrated into your prompt. The available properties include:
+Easily leverage GPT models within ruby-spacy by using an OpenAI API key. When constructing prompts for the `Doc::openai_query` method, you can incorporate various token properties from the document. These properties are retrieved through function calls and seamlessly integrated into your prompt (`gpt-3.5-turbo-0613` or greater is needed). The available properties include:
 
 - `surface`
 - `lemma`
@@ -573,31 +573,25 @@ doc = nlp.read("The Beatles released 12 studio albums")
 
 res = doc.openai_query(
   access_token: api_key,
-  model: "gpt-4", 
-  prompt: "Elaborate on the statement in the text"
+  prompt: "Extract the topic of the document and list five entities, including the topic itself, that can be considered highly relevant to that topic."
 )
-
-puts res
 ```
 
 Output:
 
-> The statement refers to the fact that The Beatles, an iconic British rock band formed in 1960, released 12 original studio albums during their active years. This does not include live albums, compilations, EPs, or post-breakup releases. Their studio albums, which were all commercial successes, feature some of their most famous songs and have had a major influence on popular music. The 12 studio albums include:
+> Topic: The Beatles' studio albums
 > 
-> 1. Please Please Me (1963)
-> 2. With the Beatles (1963)
-> 3. A Hard Day's Night (1964)
-> 4. Beatles for Sale (1964)
-> 5. Help! (1965)
-> 6. Rubber Soul (1965)
-> 7. Revolver (1966)
-> 8. Sgt. Pepper's Lonely Hearts Club Band (1967)
-> 9. The Beatles (also known as the White Album) (1968)
-> 10. Yellow Submarine (1969)
-> 11. Abbey Road (1969)
-> 12. Let It Be (1970)
-> 
-> Each album showcased the band's evolving musical style and lyrical sophistication, ranging from their early rock and roll sound to the more experimental and complex compositions in their later years.
+> Relevant entities:
+> 1. The Beatles
+> 2. Studio albums
+> 3. Music
+> 4. Band
+> 5. Rock music
+> 6. Pop music
+> 7. John Lennon
+> 8. Paul McCartney
+> 9. George Harrison
+> 10. Ringo Starr
 
 ### GPT Prompting 3
 

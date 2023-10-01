@@ -133,7 +133,7 @@ class SpacyTest < Minitest::Test
 
   def test_openai_query
     doc = NLP_SM.read("The Beatles released 12 studio albums")
-    res = doc.openai_query(prompt: "Translate the text to Japanese.", max_tokens: 1000)
+    res = doc.openai_query(prompt: "Extract the topic of the document and list up to 10 entities (names, concepts, locations, etc.) that are considered highly relevant to it.", max_tokens: 1000)
     assert_instance_of String, res
   end
 
