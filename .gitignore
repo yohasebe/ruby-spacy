@@ -57,3 +57,8 @@ Gemfile.lock
 
 .DS_Store
 tags
+
+.python-version
+.rubocop.yml
+.solargraph.yml
+.yardopts
