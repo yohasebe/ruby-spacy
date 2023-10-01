@@ -131,6 +131,24 @@ class SpacyTest < Minitest::Test
     assert_equal doc.vector.shape.to_s, "(300,)"
   end
 
+  def test_openai_query
+    doc = NLP_SM.read("The Beatles released 12 studio albums")
+    res = doc.openai_query(prompt: "Translate the text to Japanese.", max_tokens: 1000)
+    assert_instance_of String, res
+  end
+
+  def test_openai_completion
+    doc = NLP_SM.read("Vladimir Nabokov was a")
+    res = doc.openai_completion
+    assert_instance_of String, res
+  end
+
+  def test_openai_embeddings
+    doc = NLP_SM.read("Vladimir Nabokov was a Russian-American novelist, poet, translator and entomologist.")
+    res = doc.openai_embeddings
+    assert_instance_of Array, res
+  end
+
   # ============================
   # Language related methods
   # ============================

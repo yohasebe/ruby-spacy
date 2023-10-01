@@ -7,6 +7,7 @@ gemspec
 
 gem "numpy"
 gem "pycall"
+gem "ruby-openai"
 gem "terminal-table"
 
 group :development do

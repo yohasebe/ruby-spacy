@@ -11,8 +11,9 @@
 | ✅ | Named entity recognition                           |
 | ✅ | Syntactic dependency visualization                 |
 | ✅ | Access to pre-trained word vectors                 |
+| ✅ | OpenAI Chat/Completion/Embeddings API integration  |
 
-Current Version: `0.1.5.4`
+Current Version: `0.2.0`
 
 - Addressed installation issues in some environments
 
@@ -473,9 +474,6 @@ Output:
 | 10   | marseille   | 0.6370999813079834 |
 
 
-
-
-
 ### Word vector calculation (Japanese)
 
 **東京 - 日本 + フランス = パリ ?**
@@ -521,6 +519,174 @@ Output:
 | 8    | ニース         | 0.5679000020027161 |
 | 9    | アルザス       | 0.5644999742507935 |
 | 10   | 南仏           | 0.5547999739646912 |
+
+
+## OpenAI API Integration
+
+You can access GPT models from `doc` using the OpenAI API key. The following token information of the text contained in the `doc` may be retrieved via function calling and sent along with the prompt, enabling you to use these token attributes in the prompt.
+
+- `surface`
+- `lemma`
+- `tag`
+- `pos` (part of speech)
+- `dep` (dependency)
+- `ent_type` (entity type)
+- `morphology`
+
+### GPT Prompting 1
+
+Ruby code:
+
+```ruby
+
+require "ruby-spacy"
+
+api_key = ENV["OPENAI_API_KEY"]
+nlp = Spacy::Language.new("en_core_web_sm")
+doc = nlp.read("The Beatles released 12 studio albums")
+
+# default parameter values
+# max_tokens: 1000
+# temperature: 0.7
+# model: "gpt-3.5-turbo-0613"
+res1 = doc.openai_query(
+  access_token: api_key,
+  prompt: "Translate the text to Japanese.")
+puts res1
+```
+
+Output:
+
+| ビートルズは12枚のスタジオアルバムをリリースしました。
+
+### GPT Prompting 2
+
+Ruby code: 
+
+```ruby
+require "ruby-spacy"
+
+api_key = ENV["OPENAI_API_KEY"]
+nlp = Spacy::Language.new("en_core_web_sm")
+doc = nlp.read("The Beatles released 12 studio albums")
+
+res = doc.openai_query(
+  access_token: api_key,
+  model: "gpt-4", 
+  prompt: "Elaborate on the statement in the text"
+)
+
+puts res
+```
+
+Output:
+
+| The statement refers to the fact that The Beatles, an iconic British rock band formed in 1960, released 12 original studio albums during their active years. This does not include live albums, compilations, EPs, or post-breakup releases. Their studio albums, which were all commercial successes, feature some of their most famous songs and have had a major influence on popular music. The 12 studio albums include:
+| 
+| 1. Please Please Me (1963)
+| 2. With the Beatles (1963)
+| 3. A Hard Day's Night (1964)
+| 4. Beatles for Sale (1964)
+| 5. Help! (1965)
+| 6. Rubber Soul (1965)
+| 7. Revolver (1966)
+| 8. Sgt. Pepper's Lonely Hearts Club Band (1967)
+| 9. The Beatles (also known as the White Album) (1968)
+| 10. Yellow Submarine (1969)
+| 11. Abbey Road (1969)
+| 12. Let It Be (1970)
+| 
+| Each album showcased the band's evolving musical style and lyrical sophistication, ranging from their early rock and roll sound to the more experimental and complex compositions in their later years.
+
+### GPT Prompting 3
+
+Ruby code: 
+
+```ruby
+require "ruby-spacy"
+
+api_key = ENV["OPENAI_API_KEY"]
+nlp = Spacy::Language.new("en_core_web_sm")
+
+res = doc.openai_query(
+  access_token: api_key,
+  model: "gpt-4",
+  prompt: "Generate a tree diagram from the text in the following style: [S [NP [Det the] [N cat]] [VP [V sat] [PP [P on] [NP the mat]]]"
+)
+puts res
+```
+
+Output:
+
+```
+[S
+  [NP
+    [Det The]
+    [N Beatles]
+  ]
+  [VP
+    [V released]
+    [NP
+      [Num 12]
+      [N
+        [N studio]
+        [N albums]
+      ]
+    ]
+  ]
+]
+```
+
+### GPT Text Completion
+
+Ruby code:
+
+```ruby
+require "ruby-spacy"
+
+api_key = ENV["OPENAI_API_KEY"]
+nlp = Spacy::Language.new("en_core_web_sm")
+doc = nlp.read("Vladimir Nabokov was a")
+
+# default parameter values
+# max_tokens: 1000
+# temperature: 0.7
+# model: "gpt-3.5-turbo-0613"
+res = doc.openai_completion(access_token: api_key)
+puts res
+```
+
+Output:
+
+> Russian-American novelist and lepidopterist. He was born in 1899 in St. Petersburg, Russia, and later emigrated to the United States in 1940. Nabokov is best known for his novel "Lolita," which was published in 1955 and caused much controversy due to its controversial subject matter. Throughout his career, Nabokov wrote many other notable works, including "Pale Fire" and "Ada or Ardor: A Family Chronicle." In addition to his writing, Nabokov was also a passionate butterfly collector and taxonomist, publishing several scientific papers on the subject. He passed away in 1977, leaving behind a rich literary legacy.
+
+### Text Embeddings
+
+Ruby code:
+
+```ruby
+require "ruby-spacy"
+
+api_key = ENV["OPENAI_API_KEY"]
+nlp = Spacy::Language.new("en_core_web_sm")
+doc = nlp.read("Vladimir Nabokov was a Russian-American novelist, poet, translator and entomologist.")
+
+# default model : text-embedding-ada-002
+res = doc.openai_embeddings(access_token: api_key)
+
+puts res
+```
+
+Output:
+
+```
+-0.00208362
+-0.01645165
+ 0.0110955965
+ 0.012802119
+ 0.0012175755
+ ...
+```
 
 ## Author
 

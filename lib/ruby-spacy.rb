@@ -4,6 +4,7 @@ require_relative "ruby-spacy/version"
 require "strscan"
 require "numpy"
 require "pycall"
+require "openai"
 
 # This module covers the areas of spaCy functionality for _using_ many varieties of its language models, not for _building_ ones.
 module Spacy
@@ -36,6 +37,18 @@ module Spacy
     PyCall::List.call(py_generator)
   end
 
+  @openai_client = nil
+
+  def self.openai_client(access_token:)
+    # If @client is already set, just return it. Otherwise, create a new instance.
+    @openai_client ||= OpenAI::Client.new(access_token: access_token)
+  end
+
+  # Provide an accessor method to get the client (optional)
+  def self.client
+    @openai_client
+  end
+
   # See also spaCy Python API document for [`Doc`](https://spacy.io/api/doc).
   class Doc
     # @return [Object] a Python `Language` instance accessible via `PyCall`
@@ -59,7 +72,8 @@ module Spacy
     # @param nlp [Language] an instance of {Language} class
     # @param py_doc [Object] an instance of Python `Doc` class
     # @param text [String] the text string to be analyzed
-    def initialize(nlp, py_doc: nil, text: nil, max_retrial: MAX_RETRIAL, retrial: 0)
+    def initialize(nlp, py_doc: nil, text: nil, max_retrial: MAX_RETRIAL,
+                   retrial: 0)
       @py_nlp = nlp
       @py_doc = py_doc || @py_doc = nlp.call(text)
       @text = @py_doc.text
@@ -196,6 +210,128 @@ module Spacy
     # @return [String] in the case of `dep`, the output text will be an SVG, whereas in the `ent` style, the output text will be an HTML.
     def displacy(style: "dep", compact: false)
       PyDisplacy.render(py_doc, style: style, options: { compact: compact }, jupyter: false)
+    end
+
+    def openai_query(access_token: nil,
+                     max_tokens: 1000,
+                     temperature: 0.7,
+                     model: "gpt-3.5-turbo-0613",
+                     messages: [],
+                     prompt: nil)
+      if messages.empty?
+        messages = [
+          { role: "system", content: prompt },
+          { role: "user", content: @text }
+        ]
+      end
+
+      access_token ||= ENV["OPENAI_API_KEY"]
+      raise "Error: OPENAI_API_KEY is not set" unless access_token
+
+      begin
+        response = Spacy.openai_client(access_token: access_token).chat(
+          parameters: {
+            model: model,
+            messages: messages,
+            max_tokens: max_tokens,
+            temperature: temperature,
+            function_call: "auto",
+            stream: false,
+            functions: [
+              {
+                name: "get_tokens",
+                description: "Tokenize given text",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "description": "text to be tokenized"
+                    }
+                  },
+                  "required": ["text"]
+                }
+              }
+            ]
+          }
+        )
+
+        message = response.dig("choices", 0, "message")
+
+        if message["role"] == "assistant" && message["function_call"]
+          messages << message
+          function_name = message.dig("function_call", "name")
+          _args = JSON.parse(message.dig("function_call", "arguments"))
+          case function_name
+          when "get_tokens"
+            res = tokens.map do |t|
+              {
+                "surface": t.text,
+                "lemma": t.lemma,
+                "pos": t.pos,
+                "tag": t.tag,
+                "dep": t.dep,
+                "ent_type": t.ent_type,
+                "morphology": t.morphology
+              }
+            end.to_json
+          end
+          messages << { role: "system", content: res }
+          openai_query(access_token: access_token, max_tokens: max_tokens,
+                       temperature: temperature, model: model,
+                       messages: messages, prompt: prompt)
+        else
+          message["content"]
+        end
+      rescue StandardError => e
+        puts "Error: OpenAI API call failed."
+        pp e.message
+        pp e.backtrace
+      end
+    end
+
+    def openai_completion(access_token: nil, max_tokens: 1000, temperature: 0.7, model: "gpt-3.5-turbo-0613")
+      messages = [
+        { role: "system", content: "Complete the text input by the user." },
+        { role: "user", content: @text }
+      ]
+      access_token ||= ENV["OPENAI_API_KEY"]
+      raise "Error: OPENAI_API_KEY is not set" unless access_token
+
+      begin
+        response = Spacy.openai_client(access_token: access_token).chat(
+          parameters: {
+            model: model,
+            messages: messages,
+            max_tokens: max_tokens,
+            temperature: temperature
+          }
+        )
+        response.dig("choices", 0, "message", "content")
+      rescue StandardError => e
+        puts "Error: OpenAI API call failed."
+        pp e.message
+        pp e.backtrace
+      end
+    end
+
+    def openai_embeddings(access_token: nil, model: "text-embedding-ada-002")
+      access_token ||= ENV["OPENAI_API_KEY"]
+      raise "Error: OPENAI_API_KEY is not set" unless access_token
+
+      begin
+        response = Spacy.openai_client(access_token: access_token).embeddings(
+          parameters: {
+            model: model,
+            input: @text
+          }
+        )
+        response.dig("data", 0, "embedding")
+      rescue StandardError => e
+        puts "Error: OpenAI API call failed."
+        pp e.message
+        pp e.backtrace
+      end
     end
 
     # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.

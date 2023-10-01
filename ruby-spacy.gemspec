@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "numpy", "~> 0.4.0"
   spec.add_dependency "pycall", "~> 1.4.0"
+  spec.add_dependency "ruby-openai"
   spec.add_dependency "terminal-table", "~> 3.0.1"
 
   # For more information and examples about making a new gem, checkout our
