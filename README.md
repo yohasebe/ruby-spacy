@@ -558,7 +558,7 @@ puts res1
 
 Output:
 
-| ビートルズは12枚のスタジオアルバムをリリースしました。
+> ビートルズは12枚のスタジオアルバムをリリースしました。
 
 ### GPT Prompting 2
 
@@ -582,22 +582,22 @@ puts res
 
 Output:
 
-| The statement refers to the fact that The Beatles, an iconic British rock band formed in 1960, released 12 original studio albums during their active years. This does not include live albums, compilations, EPs, or post-breakup releases. Their studio albums, which were all commercial successes, feature some of their most famous songs and have had a major influence on popular music. The 12 studio albums include:
-| 
-| 1. Please Please Me (1963)
-| 2. With the Beatles (1963)
-| 3. A Hard Day's Night (1964)
-| 4. Beatles for Sale (1964)
-| 5. Help! (1965)
-| 6. Rubber Soul (1965)
-| 7. Revolver (1966)
-| 8. Sgt. Pepper's Lonely Hearts Club Band (1967)
-| 9. The Beatles (also known as the White Album) (1968)
-| 10. Yellow Submarine (1969)
-| 11. Abbey Road (1969)
-| 12. Let It Be (1970)
-| 
-| Each album showcased the band's evolving musical style and lyrical sophistication, ranging from their early rock and roll sound to the more experimental and complex compositions in their later years.
+> The statement refers to the fact that The Beatles, an iconic British rock band formed in 1960, released 12 original studio albums during their active years. This does not include live albums, compilations, EPs, or post-breakup releases. Their studio albums, which were all commercial successes, feature some of their most famous songs and have had a major influence on popular music. The 12 studio albums include:
+> 
+> 1. Please Please Me (1963)
+> 2. With the Beatles (1963)
+> 3. A Hard Day's Night (1964)
+> 4. Beatles for Sale (1964)
+> 5. Help! (1965)
+> 6. Rubber Soul (1965)
+> 7. Revolver (1966)
+> 8. Sgt. Pepper's Lonely Hearts Club Band (1967)
+> 9. The Beatles (also known as the White Album) (1968)
+> 10. Yellow Submarine (1969)
+> 11. Abbey Road (1969)
+> 12. Let It Be (1970)
+> 
+> Each album showcased the band's evolving musical style and lyrical sophistication, ranging from their early rock and roll sound to the more experimental and complex compositions in their later years.
 
 ### GPT Prompting 3
 
