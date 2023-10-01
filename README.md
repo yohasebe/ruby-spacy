@@ -523,7 +523,7 @@ Output:
 
 ## OpenAI API Integration
 
-You can access GPT models from `doc` using the OpenAI API key. The following token information of the text contained in the `doc` may be retrieved via function calling and sent along with the prompt, enabling you to use these token attributes in the prompt.
+Easily leverage GPT models within ruby-spacy by using an OpenAI API key. When constructing prompts for the Doc::openai_query method, you can incorporate various token properties from the document. These properties can be retrieved through function calls and seamlessly integrated into your prompt. The available properties include:
 
 - `surface`
 - `lemma`
@@ -551,7 +551,8 @@ doc = nlp.read("The Beatles released 12 studio albums")
 # model: "gpt-3.5-turbo-0613"
 res1 = doc.openai_query(
   access_token: api_key,
-  prompt: "Translate the text to Japanese.")
+  prompt: "Translate the text to Japanese."
+)
 puts res1
 ```
 
@@ -671,7 +672,7 @@ api_key = ENV["OPENAI_API_KEY"]
 nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("Vladimir Nabokov was a Russian-American novelist, poet, translator and entomologist.")
 
-# default model : text-embedding-ada-002
+# default model: text-embedding-ada-002
 res = doc.openai_embeddings(access_token: api_key)
 
 puts res
