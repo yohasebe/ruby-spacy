@@ -13,7 +13,7 @@
 | ✅ | Access to pre-trained word vectors                 |
 | ✅ | OpenAI Chat/Completion/Embeddings API integration  |
 
-Current Version: `0.2.0`
+Current Version: `0.2.1`
 
 - Addressed installation issues in some environments
 
@@ -35,6 +35,12 @@ Then, install [spaCy](https://spacy.io/). If you use `pip`, the following comman
 
 ```shell
 $ pip install spacy
+```
+
+Visualization feature of ruby-spacy currently only works only when spaCy 3.6.x is installed, not when 3.7, the latest version, is installed. To install spaCy 3.6.x Do the following instead:
+
+```shell
+$ pip install 'spaCy<3.7'
 ```
 
 Install trained language models. For a starter, `en_core_web_sm` will be the most useful to conduct basic text processing in English. However, if you want to use advanced features of spaCy, such as named entity recognition or document similarity calculation, you should also install a larger model like `en_core_web_lg`.
@@ -235,6 +241,8 @@ Output:
 
 ### Visualizing dependency
 
+⚠️ **Note**: This feature currently only works on spaCy 3.6 (not on 3.7)
+
 → [spaCy: Visualizers](https://spacy.io/usage/visualizers)
 
 Ruby code: 
@@ -259,6 +267,8 @@ Output:
 ![](https://github.com/yohasebe/ruby-spacy/blob/main/examples/get_started/outputs/test_dep.svg)
 
 ### Visualizing dependency (compact)
+
+⚠️ **Note**: This feature currently only works on spaCy 3.6 (not on 3.7)
 
 Ruby code: 
 
