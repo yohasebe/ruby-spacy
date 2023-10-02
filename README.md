@@ -37,7 +37,7 @@ Then, install [spaCy](https://spacy.io/). If you use `pip`, the following comman
 $ pip install spacy
 ```
 
-Visualization feature of ruby-spacy currently only works only when spaCy 3.6.x is installed, not when 3.7, the latest version, is installed. To install spaCy 3.6.x Do the following instead:
+⚠️ **Note**: The ruby-spacy visualization feature currently only works if spaCy 3.6.x is installed, not if the latest version, 3.7, is installed. To install spaCy 3.6.x instead, do the following:
 
 ```shell
 $ pip install 'spaCy<3.7'
