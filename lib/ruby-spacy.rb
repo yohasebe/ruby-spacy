@@ -213,8 +213,8 @@ module Spacy
     # @param compact [Boolean] only relevant to the `dep' style
     # @return [String] in the case of `dep`, the output text will be an SVG, whereas in the `ent` style, the output text will be an HTML.
     def displacy(style: "dep", compact: false)
-      raise "Error: displacy is not supported in spaCy 3.7" if SpacyVersion >= "3.7"
-       
+      raise "Error: displacy is not supported for spaCy 3.7" if SpacyVersion >= "3.7"
+
       PyDisplacy.render(py_doc, style: style, options: { compact: compact }, jupyter: false)
     end
 
