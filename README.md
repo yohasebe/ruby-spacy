@@ -524,7 +524,7 @@ Output:
 
 ## OpenAI API Integration
 
-> ⚠️ This feature is currently experimental. Details are subject to change. Please refer to OpenAI's [API reference](https://platform.openai.com/docs/api-reference) and (Ruby OpenAI)[https://github.com/alexrudall/ruby-openai] for available parameters (`max_tokens`, `temperature`, etc).
+> ⚠️ This feature is currently experimental. Details are subject to change. Please refer to OpenAI's [API reference](https://platform.openai.com/docs/api-reference) and [Ruby OpenAI](https://github.com/alexrudall/ruby-openai) for available parameters (`max_tokens`, `temperature`, etc).
 
 Easily leverage GPT models within ruby-spacy by using an OpenAI API key. When constructing prompts for the `Doc::openai_query` method, you can incorporate various token properties from the document. These properties are retrieved through function calls and seamlessly integrated into your prompt (`gpt-3.5-turbo-0613` or greater is needed). The available properties include:
 
