@@ -15,7 +15,8 @@
 
 Current Version: `0.2.2`
 
-- Addressed installation issues in some environments
+- spaCy 3.7.0 supported
+- OpenAI API integration
 
 ## Installation of Prerequisites
 
