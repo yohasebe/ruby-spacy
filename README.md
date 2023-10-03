@@ -17,7 +17,7 @@ Current Version: `0.2.2`
 
 - Addressed installation issues in some environments
 
-## Installation of prerequisites
+## Installation of Prerequisites
 
 **IMPORTANT**: Make sure that the `enable-shared` option is enabled in your Python installation. You can use [pyenv](https://github.com/pyenv/pyenv) to install any version of Python you like. Install Python 3.10.6, for instance, using pyenv with `enable-shared` as follows:
 
@@ -109,7 +109,7 @@ Output:
 |:-----:|:--:|:-------:|:--:|:------:|:----:|:-------:|:---:|:-:|:--:|:-------:|
 | Apple | is | looking | at | buying | U.K. | startup | for | $ | 1  | billion |
 
-### Part-of-speech and dependency
+### Part-of-speech and Dependency
 
 → [spaCy: Part-of-speech tags and dependencies](https://spacy.io/usage/spacy-101#annotations-pos-deps)
 
@@ -149,7 +149,7 @@ Output:
 | 1       | 1       | NUM   | CD  | compound |
 | billion | billion | NUM   | CD  | pobj     |
 
-### Part-of-speech and dependency (Japanese)
+### Part-of-speech and Dependency (Japanese)
 
 Ruby code: 
 
@@ -234,7 +234,7 @@ Output:
 | 1       | d     | false    | false   | NumType = Card                                                                      |
 | billion | xxxx  | true     | false   | NumType = Card                                                                      |
 
-### Visualizing dependency
+### Visualizing Dependency
 
 → [spaCy: Visualizers](https://spacy.io/usage/visualizers)
 
@@ -259,7 +259,7 @@ Output:
 
 ![](https://github.com/yohasebe/ruby-spacy/blob/main/examples/get_started/outputs/test_dep.svg)
 
-### Visualizing dependency (compact)
+### Visualizing Dependency (Compact)
 
 Ruby code: 
 
@@ -282,7 +282,7 @@ Output:
 
 ![](https://github.com/yohasebe/ruby-spacy/blob/main/examples/get_started/outputs/test_dep_compact.svg)
 
-### Named entity recognition
+### Named Entity Recognition
 
 → [spaCy: Named entities](https://spacy.io/usage/spacy-101#annotations-ner)
 
@@ -314,7 +314,7 @@ Output:
 | U.K.       | 27         | 31       | GPE   |
 | $1 billion | 44         | 54       | MONEY |
 
-### Named entity recognition (Japanese)
+### Named Entity Recognition (Japanese)
 
 Ruby code: 
 
@@ -347,7 +347,7 @@ Output:
 | ファミコン | 10    | 15  | PRODUCT |
 | 14,800円   | 16    | 23  | MONEY   |
 
-### Checking availability of word vectors
+### Checking Availability of Word Vectors
 
 → [spaCy: Word vectors and similarity](https://spacy.io/usage/spacy-101#vectors-similarity)
 
@@ -380,7 +380,7 @@ Output:
 | banana  | true       | 6.700014    | false  |
 | afskfsd | false      | 0.0         | true   |
 
-### Similarity calculation
+### Similarity Calculation
 
 Ruby code: 
 
@@ -405,7 +405,7 @@ Doc 2: Fast food tastes very good.
 Similarity: 0.7687607012190486
 ```
 
-### Similarity calculation (Japanese)
+### Similarity Calculation (Japanese)
 
 Ruby code: 
 
@@ -428,7 +428,7 @@ doc2: あいにくの悪天候で残念です。
 Similarity: 0.8684192637149641
 ```
 
-### Word vector calculation
+### Word Vector Calculation
 
 **Tokyo - Japan + France = Paris ?**
 
@@ -475,7 +475,7 @@ Output:
 | 10   | marseille   | 0.6370999813079834 |
 
 
-### Word vector calculation (Japanese)
+### Word Vector Calculation (Japanese)
 
 **東京 - 日本 + フランス = パリ ?**
 
@@ -523,6 +523,8 @@ Output:
 
 
 ## OpenAI API Integration
+
+⚠️ This feature is currently experimental. Details are subject to change. Please refer to OpenAI's [API reference] and (Ruby OpenAI)[] for available parameters (`max_tokens`, `temperature`, etc).
 
 Easily leverage GPT models within ruby-spacy by using an OpenAI API key. When constructing prompts for the `Doc::openai_query` method, you can incorporate various token properties from the document. These properties are retrieved through function calls and seamlessly integrated into your prompt (`gpt-3.5-turbo-0613` or greater is needed). The available properties include:
 
