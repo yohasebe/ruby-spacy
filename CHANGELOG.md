@@ -1,5 +1,14 @@
 # Change Log
 
+## 0.2.0 - 2022-10-02
+- spaCy 3.7.0 supported
+
+## 0.2.0 - 2022-10-02
+### Added
+- `Doc::openai_query`
+- `Doc::openai_completion`
+- `Doc::openai_embeddings`
+
 ## 0.1.4.1 - 2021-07-06
 - Test code refined
 - `Spacy::Language::most_similar` returns an array of hash-based objects that accepts method calls
