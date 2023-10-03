@@ -13,7 +13,7 @@
 | ✅ | Access to pre-trained word vectors                 |
 | ✅ | OpenAI Chat/Completion/Embeddings API integration  |
 
-Current Version: `0.2.1`
+Current Version: `0.2.2`
 
 - Addressed installation issues in some environments
 

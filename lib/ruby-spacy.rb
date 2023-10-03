@@ -28,11 +28,8 @@ module Spacy
   # Python `Matcher` class object
   PyMatcher = spacy.matcher.Matcher
 
-  # This does not work for spaCy 3.7
   # Python `displacy` object
-  if SpacyVersion < "3.7"
-    PyDisplacy = spacy.displacy
-  end
+  PyDisplacy = PyCall.import_module('spacy.displacy')
 
   # A utility module method to convert Python's generator object to a Ruby array,
   # mainly used on the items inside the array returned from dependency-related methods
@@ -213,8 +210,6 @@ module Spacy
     # @param compact [Boolean] only relevant to the `dep' style
     # @return [String] in the case of `dep`, the output text will be an SVG, whereas in the `ent` style, the output text will be an HTML.
     def displacy(style: "dep", compact: false)
-      raise "Error: displacy is not supported for spaCy 3.7" if SpacyVersion >= "3.7"
-
       PyDisplacy.render(py_doc, style: style, options: { compact: compact }, jupyter: false)
     end
 

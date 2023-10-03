@@ -6,7 +6,7 @@ source "https://rubygems.org"
 gemspec
 
 gem "numpy"
-gem "pycall"
+gem "pycall", "~> 1.5.1"
 gem "ruby-openai"
 gem "terminal-table"
 

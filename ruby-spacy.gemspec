@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "solargraph"
 
   spec.add_dependency "numpy", "~> 0.4.0"
-  spec.add_dependency "pycall", "~> 1.4.0"
+  spec.add_dependency "pycall", "~> 1.5.1"
   spec.add_dependency "ruby-openai"
   spec.add_dependency "terminal-table", "~> 3.0.1"
 
