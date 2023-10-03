@@ -690,6 +690,7 @@ require "ruby-spacy"
 
 api_key = ENV["OPENAI_API_KEY"]
 nlp = Spacy::Language.new("en_core_web_sm")
+doc = nlp.read("The Beatles released 12 studio albums")
 
 # default parameter values
 # max_tokens: 1000
