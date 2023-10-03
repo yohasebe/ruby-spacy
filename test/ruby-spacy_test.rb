@@ -139,7 +139,7 @@ class SpacyTest < Minitest::Test
 
   def test_openai_query2
     doc = NLP_SM.read("The Beatles released 12 studio albums")
-    res = doc.openai_query(prompt: "List detailed morphology data of each of the word used in the sentence", max_tokens: 1000)
+    res = doc.openai_query(prompt: "List token data of each of the words used in the sentence", max_tokens: 1000)
     assert_instance_of String, res
   end
 

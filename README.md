@@ -534,7 +534,7 @@ Easily leverage GPT models within ruby-spacy by using an OpenAI API key. When co
 - `ent_type` (entity type)
 - `morphology`
 
-### GPT Prompting 1
+### GPT Prompting (Translation)
 
 Ruby code:
 
@@ -561,7 +561,7 @@ Output:
 
 > ビートルズは12枚のスタジオアルバムをリリースしました。
 
-### GPT Prompting 2
+### GPT Prompting (Elaboration)
 
 Ruby code: 
 
@@ -572,6 +572,10 @@ api_key = ENV["OPENAI_API_KEY"]
 nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("The Beatles were an English rock band formed in Liverpool in 1960.")
 
+# default parameter values
+# max_tokens: 1000
+# temperature: 0.7
+# model: "gpt-3.5-turbo-0613"
 res = doc.openai_query(
   access_token: api_key,
   prompt: "Extract the topic of the document and list 10 entities (names, concepts, locations, etc.) that are relevant to the topic."
@@ -594,7 +598,87 @@ Output:
 > 9. Ringo Starr (member)
 > 10. Music
 
-### GPT Prompting 3
+### GPT Prompting (Token Properties)
+
+Ruby code: 
+
+```ruby
+require "ruby-spacy"
+
+api_key = ENV["OPENAI_API_KEY"]
+nlp = Spacy::Language.new("en_core_web_sm")
+doc = nlp.read("The Beatles released 12 studio albums")
+
+# default parameter values
+# max_tokens: 1000
+# temperature: 0.7
+# model: "gpt-3.5-turbo-0613"
+res = doc.openai_query(
+  access_token: api_key,
+  prompt: "List token data of each of the words used in the sentence"
+)
+```
+
+Output:
+
+> Here is the detailed morphology data for each word in the sentence:
+> 
+> 1. Token: "The"
+>    - Surface: "The"
+>    - Lemma: "the"
+>    - Part-of-speech: Determiner (DET)
+>    - Tag: DT
+>    - Dependency: Determiner (det)
+>    - Entity type: None
+>    - Morphology: {'Definite': 'Def', 'PronType': 'Art'}
+> 
+> 2. Token: "Beatles"
+>    - Surface: "Beatles"
+>    - Lemma: "beatle"
+>    - Part-of-speech: Noun (NOUN)
+>    - Tag: NNS
+>    - Dependency: Noun subject (nsubj)
+>    - Entity type: GPE (Geopolitical Entity)
+>    - Morphology: {'Number': 'Plur'}
+> 
+> 3. Token: "released"
+>    - Surface: "released"
+>    - Lemma: "release"
+>    - Part-of-speech: Verb (VERB)
+>    - Tag: VBD
+>    - Dependency: Root
+>    - Entity type: None
+>    - Morphology: {'Tense': 'Past', 'VerbForm': 'Fin'}
+> 
+> 4. Token: "12"
+>    - Surface: "12"
+>    - Lemma: "12"
+>    - Part-of-speech: Numeral (NUM)
+>    - Tag: CD
+>    - Dependency: Numeric modifier (nummod)
+>    - Entity type: Cardinal number (CARDINAL)
+>    - Morphology: {'NumType': 'Card'}
+> 
+> 5. Token: "studio"
+>    - Surface: "studio"
+>    - Lemma: "studio"
+>    - Part-of-speech: Noun (NOUN)
+>    - Tag: NN
+>    - Dependency: Compound
+>    - Entity type: None
+>    - Morphology: {'Number': 'Sing'}
+> 
+> 6. Token: "albums"
+>    - Surface: "albums"
+>    - Lemma: "album"
+>    - Part-of-speech: Noun (NOUN)
+>    - Tag: NNS
+>    - Dependency: Direct object (dobj)
+>    - Entity type: None
+>    - Morphology: {'Number': 'Plur'}
+
+
+### GPT Prompting (RAG with Token Properties)
 
 Ruby code: 
 
@@ -604,10 +688,13 @@ require "ruby-spacy"
 api_key = ENV["OPENAI_API_KEY"]
 nlp = Spacy::Language.new("en_core_web_sm")
 
+# default parameter values
+# max_tokens: 1000
+# temperature: 0.7
 res = doc.openai_query(
   access_token: api_key,
   model: "gpt-4",
-  prompt: "Generate a tree diagram from the text in the following style: [S [NP [Det the] [N cat]] [VP [V sat] [PP [P on] [NP the mat]]]"
+  prompt: "Generate a tree diagram from the text using given token data. Use the following bracketing style: [S [NP [Det the] [N cat]] [VP [V sat] [PP [P on] [NP the mat]]]"
 )
 puts res
 ```

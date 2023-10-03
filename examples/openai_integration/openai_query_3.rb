@@ -13,12 +13,12 @@ doc = nlp.read("The Beatles released 12 studio albums")
 # max_tokens: 1000
 # temperature: 0.7
 # model: "gpt-3.5-turbo-0613"
-res = doc.openai_query(access_token: api_key, prompt: "List detailed morphology data of each of the word used in the sentence")
+res = doc.openai_query(access_token: api_key, prompt: "List token data of each of the words used in the sentence")
 
 puts res
 
-# Here is the detailed morphology data for each word in the sentence:
-# 
+# Here is the token data for each word in the sentence: 
+#
 # 1. Token: "The"
 #    - Surface: "The"
 #    - Lemma: "the"
@@ -27,7 +27,7 @@ puts res
 #    - Dependency: Determiner (det)
 #    - Entity type: None
 #    - Morphology: {'Definite': 'Def', 'PronType': 'Art'}
-# 
+#
 # 2. Token: "Beatles"
 #    - Surface: "Beatles"
 #    - Lemma: "beatle"
@@ -36,7 +36,7 @@ puts res
 #    - Dependency: Noun subject (nsubj)
 #    - Entity type: GPE (Geopolitical Entity)
 #    - Morphology: {'Number': 'Plur'}
-# 
+#
 # 3. Token: "released"
 #    - Surface: "released"
 #    - Lemma: "release"
@@ -45,7 +45,7 @@ puts res
 #    - Dependency: Root
 #    - Entity type: None
 #    - Morphology: {'Tense': 'Past', 'VerbForm': 'Fin'}
-# 
+#
 # 4. Token: "12"
 #    - Surface: "12"
 #    - Lemma: "12"
@@ -54,7 +54,7 @@ puts res
 #    - Dependency: Numeric modifier (nummod)
 #    - Entity type: Cardinal number (CARDINAL)
 #    - Morphology: {'NumType': 'Card'}
-# 
+#
 # 5. Token: "studio"
 #    - Surface: "studio"
 #    - Lemma: "studio"
@@ -63,7 +63,7 @@ puts res
 #    - Dependency: Compound
 #    - Entity type: None
 #    - Morphology: {'Number': 'Sing'}
-# 
+#
 # 6. Token: "albums"
 #    - Surface: "albums"
 #    - Lemma: "album"

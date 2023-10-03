@@ -16,7 +16,7 @@ doc = nlp.read("The Beatles released 12 studio albums")
 res = doc.openai_query(
   access_token: api_key,
   model: "gpt-4",
-  prompt: "Generate a tree diagram from the text in the following style: [S [NP [Det the] [N cat]] [VP [V sat] [PP [P on] [NP the mat]]]"
+  prompt: "Generate a tree diagram from the text using given token data. Use the following bracketing style: [S [NP [Det the] [N cat]] [VP [V sat] [PP [P on] [NP the mat]]]"
 )
 
 puts res
