@@ -37,11 +37,6 @@ Then, install [spaCy](https://spacy.io/). If you use `pip`, the following comman
 $ pip install spacy
 ```
 
-⚠️ **Note**: The ruby-spacy visualization feature currently only works if spaCy 3.6.x is installed, not if the latest version, 3.7, is installed. To install spaCy 3.6.x instead, do the following:
-
-```shell
-$ pip install 'spaCy<3.7'
-```
 
 Install trained language models. For a starter, `en_core_web_sm` will be the most useful to conduct basic text processing in English. However, if you want to use advanced features of spaCy, such as named entity recognition or document similarity calculation, you should also install a larger model like `en_core_web_lg`.
 
@@ -241,8 +236,6 @@ Output:
 
 ### Visualizing dependency
 
-⚠️ **Note**: This feature currently only works on spaCy 3.6 (not on 3.7)
-
 → [spaCy: Visualizers](https://spacy.io/usage/visualizers)
 
 Ruby code: 
@@ -267,8 +260,6 @@ Output:
 ![](https://github.com/yohasebe/ruby-spacy/blob/main/examples/get_started/outputs/test_dep.svg)
 
 ### Visualizing dependency (compact)
-
-⚠️ **Note**: This feature currently only works on spaCy 3.6 (not on 3.7)
 
 Ruby code: 
 
@@ -579,29 +570,29 @@ require "ruby-spacy"
 
 api_key = ENV["OPENAI_API_KEY"]
 nlp = Spacy::Language.new("en_core_web_sm")
-doc = nlp.read("The Beatles released 12 studio albums")
+doc = nlp.read("The Beatles were an English rock band formed in Liverpool in 1960.")
 
 res = doc.openai_query(
   access_token: api_key,
-  prompt: "Extract the topic of the document and list five entities, including the topic itself, that can be considered highly relevant to that topic."
+  prompt: "Extract the topic of the document and list 10 entities (names, concepts, locations, etc.) that are relevant to the topic."
 )
 ```
 
 Output:
 
-> Topic: The Beatles' studio albums
+> Topic: The Beatles
 > 
-> Relevant entities:
-> 1. The Beatles
-> 2. Studio albums
-> 3. Music
-> 4. Band
-> 5. Rock music
-> 6. Pop music
-> 7. John Lennon
-> 8. Paul McCartney
-> 9. George Harrison
-> 10. Ringo Starr
+> Entities:
+> 1. The Beatles (band)
+> 2. English (nationality)
+> 3. Rock band
+> 4. Liverpool (city)
+> 5. 1960 (year)
+> 6. John Lennon (member)
+> 7. Paul McCartney (member)
+> 8. George Harrison (member)
+> 9. Ringo Starr (member)
+> 10. Music
 
 ### GPT Prompting 3
 

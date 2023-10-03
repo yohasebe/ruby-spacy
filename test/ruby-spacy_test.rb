@@ -131,9 +131,15 @@ class SpacyTest < Minitest::Test
     assert_equal doc.vector.shape.to_s, "(300,)"
   end
 
-  def test_openai_query
+  def test_openai_query1
+    doc = NLP_SM.read("The Beatles were an English rock band formed in Liverpool in 1960.")
+    res = doc.openai_query(prompt: "Extract the topic of the document and list 10 entities (names, concepts, locations, etc.) that are relevant to the topic.", max_tokens: 1000)
+    assert_instance_of String, res
+  end
+
+  def test_openai_query2
     doc = NLP_SM.read("The Beatles released 12 studio albums")
-    res = doc.openai_query(prompt: "Extract the topic of the document and list up to 10 entities (names, concepts, locations, etc.) that are considered highly relevant to it.", max_tokens: 1000)
+    res = doc.openai_query(prompt: "List detailed morphology data of each of the word used in the sentence", max_tokens: 1000)
     assert_instance_of String, res
   end
 

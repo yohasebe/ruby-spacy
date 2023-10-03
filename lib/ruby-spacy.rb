@@ -241,7 +241,7 @@ module Spacy
             functions: [
               {
                 name: "get_tokens",
-                description: "Tokenize given text",
+                description: "Tokenize given text and return a list of tokens with their attributes: surface, lemma, tag, pos (part-of-speech), dep (dependency), ent_type (entity type), and morphology",
                 "parameters": {
                   "type": "object",
                   "properties": {
