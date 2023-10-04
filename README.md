@@ -601,7 +601,7 @@ Output:
 > 9. Ringo Starr (member)
 > 10. Music
 
-### GPT Prompting (Token Properties)
+### GPT Prompting (JSON Output Using RAG with Token Properties)
 
 Ruby code: 
 
@@ -618,70 +618,80 @@ doc = nlp.read("The Beatles released 12 studio albums")
 # model: "gpt-3.5-turbo-0613"
 res = doc.openai_query(
   access_token: api_key,
-  prompt: "List token data of each of the words used in the sentence"
+  prompt: "List token data of each of the words used in the sentence. Add 'meaning' property and value (brief semantic definition) to each token data. Output as a JSON object."
 )
 ```
 
 Output:
 
-> Here is the detailed morphology data for each word in the sentence:
-> 
-> 1. Token: "The"
->    - Surface: "The"
->    - Lemma: "the"
->    - Part-of-speech: Determiner (DET)
->    - Tag: DT
->    - Dependency: Determiner (det)
->    - Entity type: None
->    - Morphology: {'Definite': 'Def', 'PronType': 'Art'}
-> 
-> 2. Token: "Beatles"
->    - Surface: "Beatles"
->    - Lemma: "beatle"
->    - Part-of-speech: Noun (NOUN)
->    - Tag: NNS
->    - Dependency: Noun subject (nsubj)
->    - Entity type: GPE (Geopolitical Entity)
->    - Morphology: {'Number': 'Plur'}
-> 
-> 3. Token: "released"
->    - Surface: "released"
->    - Lemma: "release"
->    - Part-of-speech: Verb (VERB)
->    - Tag: VBD
->    - Dependency: Root
->    - Entity type: None
->    - Morphology: {'Tense': 'Past', 'VerbForm': 'Fin'}
-> 
-> 4. Token: "12"
->    - Surface: "12"
->    - Lemma: "12"
->    - Part-of-speech: Numeral (NUM)
->    - Tag: CD
->    - Dependency: Numeric modifier (nummod)
->    - Entity type: Cardinal number (CARDINAL)
->    - Morphology: {'NumType': 'Card'}
-> 
-> 5. Token: "studio"
->    - Surface: "studio"
->    - Lemma: "studio"
->    - Part-of-speech: Noun (NOUN)
->    - Tag: NN
->    - Dependency: Compound
->    - Entity type: None
->    - Morphology: {'Number': 'Sing'}
-> 
-> 6. Token: "albums"
->    - Surface: "albums"
->    - Lemma: "album"
->    - Part-of-speech: Noun (NOUN)
->    - Tag: NNS
->    - Dependency: Direct object (dobj)
->    - Entity type: None
->    - Morphology: {'Number': 'Plur'}
+```json
+{
+  "tokens": [
+    {
+      "surface": "The",
+      "lemma": "the",
+      "pos": "DET",
+      "tag": "DT",
+      "dep": "det",
+      "ent_type": "",
+      "morphology": "{'Definite': 'Def', 'PronType': 'Art'}",
+      "meaning": "Used to refer to one or more people or things already mentioned or assumed to be common knowledge"
+    },
+    {
+      "surface": "Beatles",
+      "lemma": "beatle",
+      "pos": "NOUN",
+      "tag": "NNS",
+      "dep": "nsubj",
+      "ent_type": "GPE",
+      "morphology": "{'Number': 'Plur'}",
+      "meaning": "A British rock band formed in Liverpool in 1960"
+    },
+    {
+      "surface": "released",
+      "lemma": "release",
+      "pos": "VERB",
+      "tag": "VBD",
+      "dep": "ROOT",
+      "ent_type": "",
+      "morphology": "{'Tense': 'Past', 'VerbForm': 'Fin'}",
+      "meaning": "To make something available or known to the public"
+    },
+    {
+      "surface": "12",
+      "lemma": "12",
+      "pos": "NUM",
+      "tag": "CD",
+      "dep": "nummod",
+      "ent_type": "CARDINAL",
+      "morphology": "{'NumType': 'Card'}",
+      "meaning": "A number representing a quantity"
+    },
+    {
+      "surface": "studio",
+      "lemma": "studio",
+      "pos": "NOUN",
+      "tag": "NN",
+      "dep": "compound",
+      "ent_type": "",
+      "morphology": "{'Number': 'Sing'}",
+      "meaning": "A place where creative work is done"
+    },
+    {
+      "surface": "albums",
+      "lemma": "album",
+      "pos": "NOUN",
+      "tag": "NNS",
+      "dep": "dobj",
+      "ent_type": "",
+      "morphology": "{'Number': 'Plur'}",
+      "meaning": "A collection of musical or spoken recordings"
+    }
+  ]
+}
+```
 
-
-### GPT Prompting (RAG with Token Properties)
+### GPT Prompting (Generate a Syntaxt Tree using Token Properties)
 
 Ruby code: 
 
