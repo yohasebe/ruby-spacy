@@ -1,10 +1,21 @@
 # frozen_string_literal: true
 
 require_relative "ruby-spacy/version"
-require "strscan"
 require "numpy"
-require "pycall"
 require "openai"
+require "pycall"
+require "strscan"
+require "timeout"
+
+begin
+  PyCall.init
+  _spacy = PyCall.import_module("spacy")
+rescue PyCall::PyError => e
+  puts "Failed to initialize PyCall or import spacy: #{e.message}"
+  puts "Python traceback:"
+  puts e.traceback
+  raise
+end
 
 # This module covers the areas of spaCy functionality for _using_ many varieties of its language models, not for _building_ ones.
 module Spacy
@@ -216,7 +227,7 @@ module Spacy
     def openai_query(access_token: nil,
                      max_tokens: 1000,
                      temperature: 0.7,
-                     model: "gpt-3.5-turbo-0613",
+                     model: "gpt-4o-mini",
                      messages: [],
                      prompt: nil)
       if messages.empty?
@@ -291,7 +302,7 @@ module Spacy
       end
     end
 
-    def openai_completion(access_token: nil, max_tokens: 1000, temperature: 0.7, model: "gpt-3.5-turbo-0613")
+    def openai_completion(access_token: nil, max_tokens: 1000, temperature: 0.7, model: "gpt-4o-mini")
       messages = [
         { role: "system", content: "Complete the text input by the user." },
         { role: "user", content: @text }
@@ -355,16 +366,24 @@ module Spacy
 
     # Creates a language model instance, which is conventionally referred to by a variable named `nlp`.
     # @param model [String] A language model installed in the system
-    def initialize(model = "en_core_web_sm", max_retrial: MAX_RETRIAL, retrial: 0)
+    def initialize(model = "en_core_web_sm", max_retrial: MAX_RETRIAL, retrial: 0, timeout: 60)
       @spacy_nlp_id = "nlp_#{model.object_id}"
-      PyCall.exec("import spacy; #{@spacy_nlp_id} = spacy.load('#{model}')")
-      @py_nlp = PyCall.eval(@spacy_nlp_id)
-    rescue StandardError
-      retrial += 1
-      raise "Error: Pycall failed to load Spacy" unless retrial <= max_retrial
-
-      sleep 0.5
-      initialize(model, max_retrial: max_retrial, retrial: retrial)
+      begin
+        Timeout.timeout(timeout) do
+          PyCall.exec("import spacy; #{@spacy_nlp_id} = spacy.load('#{model}')")
+        end
+        @py_nlp = PyCall.eval(@spacy_nlp_id)
+      rescue Timeout::Error
+        raise "PyCall execution timed out after #{timeout} seconds"
+      rescue StandardError => e
+        retrial += 1
+        if retrial <= max_retrial
+          sleep 0.5
+          retry
+        else
+          raise "Failed to initialize Spacy after #{max_retrial} attempts: #{e.message}"
+        end
+      end
     end
 
     # Reads and analyze the given text.

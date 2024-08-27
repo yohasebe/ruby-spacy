@@ -12,10 +12,10 @@ doc = nlp.read("The Beatles released 12 studio albums")
 # default parameter values
 # max_tokens: 1000
 # temperature: 0.7
-# model: "gpt-3.5-turbo-0613"
+# model: "gpt-4o-mini"
 res = doc.openai_query(
   access_token: api_key,
-  model: "gpt-4",
+  model: "gpt-4o",
   prompt: "Generate a tree diagram from the text using given token data. Use the following bracketing style: [S [NP [Det the] [N cat]] [VP [V sat] [PP [P on] [NP the mat]]]"
 )
 

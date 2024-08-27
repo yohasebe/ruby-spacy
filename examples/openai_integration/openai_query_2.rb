@@ -12,7 +12,7 @@ doc = nlp.read("The Beatles were an English rock band formed in Liverpool in 196
 # default parameter values
 # max_tokens: 1000
 # temperature: 0.7
-# model: "gpt-3.5-turbo-0613"
+# model: "gpt-4o-mini"
 res = doc.openai_query(access_token: api_key, prompt: "Extract the topic of the document and list 10 entities (names, concepts, locations, etc.) that are relevant to the topic.")
 
 puts res

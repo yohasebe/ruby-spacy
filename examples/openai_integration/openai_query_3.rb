@@ -12,13 +12,13 @@ doc = nlp.read("The Beatles released 12 studio albums")
 # default parameter values
 # max_tokens: 1000
 # temperature: 0.7
-# model: "gpt-3.5-turbo-0613"
+# model: "gpt-4o-mini"
 res = doc.openai_query(
   access_token: api_key,
   prompt: "List token data of each of the words used in the sentence. Add 'meaning' property and value (brief semantic definition) to each token data. Output as a JSON object.",
   max_tokens: 1000,
   temperature: 0.7,
-  model: "gpt-3.5-turbo-0613"
+  model: "gpt-4o-mini"
 )
 
 puts res

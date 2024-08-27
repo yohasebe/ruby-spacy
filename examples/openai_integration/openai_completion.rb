@@ -12,7 +12,7 @@ doc = nlp.read("Vladimir Nabokov was a")
 # default parameter values
 # max_tokens: 1000
 # temperature: 0.7
-# model: "gpt-3.5-turbo-0613"
+# model: "gpt-4o-mini"
 res = doc.openai_completion(access_token: api_key)
 puts res
 

@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.3 - 2024-08-27
+- Timeout option added to `Spacy::Language.new`
+- Default OpenaAI models updated to `gpt-4o-mini`
+
 ## 0.2.0 - 2022-10-02
 - spaCy 3.7.0 supported
 

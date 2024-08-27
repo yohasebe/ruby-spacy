@@ -377,4 +377,24 @@ class SpacyTest < Minitest::Test
     lexeme_book = NLP_LG.vocab "book"
     assert lexeme_lemon.similarity(lexeme_orange) > lexeme_lemon.similarity(lexeme_book)
   end
+
+  # ============================
+  # Timeout and Retrial
+  # ============================
+
+  def test_language_initialization_with_timeout
+    assert_raises(RuntimeError, "PyCall execution timed out after 0.1 seconds") do
+      Timeout.stub :timeout, ->(*_args) { raise Timeout::Error } do
+        Spacy::Language.new("en_core_web_sm", timeout: 0.1)
+      end
+    end
+  end
+
+  def test_language_initialization_with_retries
+    PyCall.stub :exec, ->(*_args) { raise StandardError.new("Simulated failure") } do
+      assert_raises(RuntimeError, "Failed to initialize Spacy after 3 attempts: Simulated failure") do
+        Spacy::Language.new("en_core_web_sm", max_retrial: 3)
+      end
+    end
+  end
 end

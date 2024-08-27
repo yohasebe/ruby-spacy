@@ -13,7 +13,7 @@
 | ✅ | Access to pre-trained word vectors                 |
 | ✅ | OpenAI Chat/Completion/Embeddings API integration  |
 
-Current Version: `0.2.2`
+Current Version: `0.2.3`
 
 - spaCy 3.7.0 supported
 - OpenAI API integration
@@ -527,7 +527,7 @@ Output:
 
 > ⚠️ This feature is currently experimental. Details are subject to change. Please refer to OpenAI's [API reference](https://platform.openai.com/docs/api-reference) and [Ruby OpenAI](https://github.com/alexrudall/ruby-openai) for available parameters (`max_tokens`, `temperature`, etc).
 
-Easily leverage GPT models within ruby-spacy by using an OpenAI API key. When constructing prompts for the `Doc::openai_query` method, you can incorporate the following token properties of the document. These properties are retrieved through function calls (made internally by GPT when necessary) and seamlessly integrated into your prompt. Note that function calls need `gpt-3.5-turbo-0613` or higher. The available properties include:
+Easily leverage GPT models within ruby-spacy by using an OpenAI API key. When constructing prompts for the `Doc::openai_query` method, you can incorporate the following token properties of the document. These properties are retrieved through function calls (made internally by GPT when necessary) and seamlessly integrated into your prompt. Note that function calls need `gpt-4o-mini` or greater. The available properties include:
 
 - `surface`
 - `lemma`
@@ -552,7 +552,7 @@ doc = nlp.read("The Beatles released 12 studio albums")
 # default parameter values
 # max_tokens: 1000
 # temperature: 0.7
-# model: "gpt-3.5-turbo-0613"
+# model: "gpt-4o-mini"
 res1 = doc.openai_query(
   access_token: api_key,
   prompt: "Translate the text to Japanese."
@@ -578,7 +578,7 @@ doc = nlp.read("The Beatles were an English rock band formed in Liverpool in 196
 # default parameter values
 # max_tokens: 1000
 # temperature: 0.7
-# model: "gpt-3.5-turbo-0613"
+# model: "gpt-4o-mini"
 res = doc.openai_query(
   access_token: api_key,
   prompt: "Extract the topic of the document and list 10 entities (names, concepts, locations, etc.) that are relevant to the topic."
@@ -587,19 +587,20 @@ res = doc.openai_query(
 
 Output:
 
-> Topic: The Beatles
+> **Topic:** The Beatles
 > 
-> Entities:
-> 1. The Beatles (band)
-> 2. English (nationality)
-> 3. Rock band
-> 4. Liverpool (city)
-> 5. 1960 (year)
-> 6. John Lennon (member)
-> 7. Paul McCartney (member)
-> 8. George Harrison (member)
-> 9. Ringo Starr (member)
-> 10. Music
+> **Relevant Entities:**
+> 
+> 1. The Beatles (PERSON)
+> 2. Liverpool (GPE - Geopolitical Entity)
+> 3. English (LANGUAGE)
+> 4. Rock (MUSIC GENRE)
+> 5. 1960 (DATE)
+> 6. Band (MUSIC GROUP)
+> 7. John Lennon (PERSON - key member)
+> 8. Paul McCartney (PERSON - key member)
+> 9. George Harrison (PERSON - key member)
+> 10. Ringo Starr (PERSON - key member)
 
 ### GPT Prompting (JSON Output Using RAG with Token Properties)
 
@@ -615,7 +616,7 @@ doc = nlp.read("The Beatles released 12 studio albums")
 # default parameter values
 # max_tokens: 1000
 # temperature: 0.7
-# model: "gpt-3.5-turbo-0613"
+# model: "gpt-4o-mini"
 res = doc.openai_query(
   access_token: api_key,
   prompt: "List token data of each of the words used in the sentence. Add 'meaning' property and value (brief semantic definition) to each token data. Output as a JSON object."
@@ -635,7 +636,7 @@ Output:
       "dep": "det",
       "ent_type": "",
       "morphology": "{'Definite': 'Def', 'PronType': 'Art'}",
-      "meaning": "Used to refer to one or more people or things already mentioned or assumed to be common knowledge"
+      "meaning": "A definite article used to specify a noun."
     },
     {
       "surface": "Beatles",
@@ -645,7 +646,7 @@ Output:
       "dep": "nsubj",
       "ent_type": "GPE",
       "morphology": "{'Number': 'Plur'}",
-      "meaning": "A British rock band formed in Liverpool in 1960"
+      "meaning": "A British rock band formed in Liverpool in 1960."
     },
     {
       "surface": "released",
@@ -655,7 +656,7 @@ Output:
       "dep": "ROOT",
       "ent_type": "",
       "morphology": "{'Tense': 'Past', 'VerbForm': 'Fin'}",
-      "meaning": "To make something available or known to the public"
+      "meaning": "To make something available to the public."
     },
     {
       "surface": "12",
@@ -665,7 +666,7 @@ Output:
       "dep": "nummod",
       "ent_type": "CARDINAL",
       "morphology": "{'NumType': 'Card'}",
-      "meaning": "A number representing a quantity"
+      "meaning": "A cardinal number representing the quantity of twelve."
     },
     {
       "surface": "studio",
@@ -675,7 +676,7 @@ Output:
       "dep": "compound",
       "ent_type": "",
       "morphology": "{'Number': 'Sing'}",
-      "meaning": "A place where creative work is done"
+      "meaning": "A place where recording or filming takes place."
     },
     {
       "surface": "albums",
@@ -685,7 +686,7 @@ Output:
       "dep": "dobj",
       "ent_type": "",
       "morphology": "{'Number': 'Plur'}",
-      "meaning": "A collection of musical or spoken recordings"
+      "meaning": "Collections of music tracks or recordings."
     }
   ]
 }
@@ -748,14 +749,14 @@ doc = nlp.read("Vladimir Nabokov was a")
 # default parameter values
 # max_tokens: 1000
 # temperature: 0.7
-# model: "gpt-3.5-turbo-0613"
+# model: "gpt-4o-mini"
 res = doc.openai_completion(access_token: api_key)
 puts res
 ```
 
 Output:
 
-> Russian-American novelist and lepidopterist. He was born in 1899 in St. Petersburg, Russia, and later emigrated to the United States in 1940. Nabokov is best known for his novel "Lolita," which was published in 1955 and caused much controversy due to its controversial subject matter. Throughout his career, Nabokov wrote many other notable works, including "Pale Fire" and "Ada or Ardor: A Family Chronicle." In addition to his writing, Nabokov was also a passionate butterfly collector and taxonomist, publishing several scientific papers on the subject. He passed away in 1977, leaving behind a rich literary legacy.
+> Vladimir Nabokov was a Russian-American novelist, poet, and entomologist, best known for his intricate prose style and innovative narrative techniques. He is most famously recognized for his controversial novel "Lolita," which explores themes of obsession and manipulation. Nabokov's works often reflect his fascination with language, memory, and the nature of art. In addition to his literary accomplishments, he was also a passionate lepidopterist, contributing to the field of butterfly studies. His literary career spanned several decades, and his influence continues to be felt in contemporary literature. 
 
 ### Text Embeddings
 
@@ -777,12 +778,22 @@ puts res
 Output:
 
 ```
--0.00208362
--0.01645165
- 0.0110955965
- 0.012802119
- 0.0012175755
- ...
+-0.0023891362
+-0.016671216
+0.010879759
+0.012918914
+0.0012281279
+...
+```
+
+## Advanced Usage
+
+### Setting a Timeout
+
+You can set a timeout for the `Spacy::Language.new` method:
+
+```ruby
+nlp = Spacy::Language.new("en_core_web_sm", timeout: 120) # Set timeout to 120 seconds
 ```
 
 ## Author

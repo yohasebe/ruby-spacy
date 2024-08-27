@@ -12,7 +12,7 @@ doc = nlp.read("The Beatles released 12 studio albums")
 # default parameter values
 # max_tokens: 1000
 # temperature: 0.7
-# model: "gpt-3.5-turbo-0613"
+# model: "gpt-4o-mini"
 res = doc.openai_query(access_token: api_key, prompt: "Translate the text to Japanese.")
 
 puts res
