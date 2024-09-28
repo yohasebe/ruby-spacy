@@ -351,7 +351,7 @@ module Spacy
       @py_doc.send(name, *args)
     end
 
-    def respond_to_missing?(sym)
+    def respond_to_missing?(sym, *args)
       sym ? true : super
     end
   end
@@ -473,7 +473,7 @@ module Spacy
       @py_nlp.send(name, *args)
     end
 
-    def respond_to_missing?(sym)
+    def respond_to_missing?(sym, *args)
       sym ? true : super
     end
   end
@@ -679,7 +679,7 @@ module Spacy
       @py_span.send(name, *args)
     end
 
-    def respond_to_missing?(sym)
+    def respond_to_missing?(sym, *args)
       sym ? true : super
     end
   end
@@ -845,7 +845,7 @@ module Spacy
       @py_token.send(name, *args)
     end
 
-    def respond_to_missing?(sym)
+    def respond_to_missing?(sym, *args)
       sym ? true : super
     end
   end
@@ -920,7 +920,7 @@ module Spacy
       @py_lexeme.send(name, *args)
     end
 
-    def respond_to_missing?(sym)
+    def respond_to_missing?(sym, *args)
       sym ? true : super
     end
   end
