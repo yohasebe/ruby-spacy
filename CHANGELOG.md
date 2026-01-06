@@ -1,17 +1,34 @@
 # Change Log
 
+## 0.3.0 - 2025-01-06
+### Added
+- Ruby 4.0 support
+- `Doc#to_bytes` for serializing documents to binary format
+- `Doc.from_bytes` for restoring documents from binary data
+- `PhraseMatcher` class for efficient phrase matching
+- `Language#phrase_matcher` helper method
+
+### Changed
+- Replaced `ruby-openai` gem with custom `OpenAIClient` implementation
+- Updated default OpenAI model to `gpt-5-mini`
+- Updated embeddings model to `text-embedding-3-small`
+- Changed `max_tokens` parameter to `max_completion_tokens` (backward compatible)
+- Added `fiddle` gem dependency (required for Ruby 4.0)
+
+## 0.2.4 - 2024-12-11
+### Changed
+- Timeout and retry feature for `Spacy::Language.new`
+
 ## 0.2.3 - 2024-08-27
 - Timeout option added to `Spacy::Language.new`
-- Default OpenaAI models updated to `gpt-4o-mini`
-
-## 0.2.0 - 2022-10-02
-- spaCy 3.7.0 supported
+- Default OpenAI models updated to `gpt-4o-mini`
 
 ## 0.2.0 - 2022-10-02
 ### Added
-- `Doc::openai_query`
-- `Doc::openai_completion`
-- `Doc::openai_embeddings`
+- spaCy 3.7.0 supported
+- `Doc#openai_query`
+- `Doc#openai_completion`
+- `Doc#openai_embeddings`
 
 ## 0.1.4.1 - 2021-07-06
 - Test code refined

@@ -5,9 +5,9 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in ruby-spacy.gemspec
 gemspec
 
+gem "fiddle" # Required for Ruby 4.0+ (moved from default to bundled gem)
 gem "numpy"
 gem "pycall", "~> 1.5.1"
-gem "ruby-openai"
 gem "terminal-table"
 
 group :development do

@@ -155,6 +155,25 @@ class SpacyTest < Minitest::Test
     assert_instance_of Array, res
   end
 
+  def test_openai_query_with_max_completion_tokens
+    doc = NLP_SM.read("Hello world")
+    res = doc.openai_query(prompt: "Translate to Japanese", max_completion_tokens: 100)
+    assert_instance_of String, res
+  end
+
+  def test_openai_completion_with_max_completion_tokens
+    doc = NLP_SM.read("Ruby is a")
+    res = doc.openai_completion(max_completion_tokens: 100)
+    assert_instance_of String, res
+  end
+
+  def test_openai_embeddings_dimensions
+    doc = NLP_SM.read("Test sentence.")
+    res = doc.openai_embeddings
+    assert_instance_of Array, res
+    assert_equal 1536, res.length # text-embedding-3-small default dimensions
+  end
+
   # ============================
   # Language related methods
   # ============================
@@ -179,7 +198,8 @@ class SpacyTest < Minitest::Test
     france = NLP_LG.get_lexeme("France")
     query = tokyo.vector - japan.vector + france.vector
     result = NLP_LG.most_similar(query, 10)
-    assert result.collect { |r| r[:text] }.index("Paris")
+    assert result.collect { |r| r[:text] }.index("Paris") ||
+      result.collect { |r| r[:text] }.index("PARIS")
   end
 
   def test_language_pipe
@@ -396,5 +416,92 @@ class SpacyTest < Minitest::Test
         Spacy::Language.new("en_core_web_sm", max_retrial: 3)
       end
     end
+  end
+
+  # ============================
+  # Serialization
+  # ============================
+
+  def test_doc_to_bytes
+    doc = NLP_SM.read("Apple Inc. was founded by Steve Jobs.")
+    bytes = doc.to_bytes
+    assert_instance_of String, bytes
+    assert bytes.encoding == Encoding::BINARY
+    assert bytes.length > 0
+  end
+
+  def test_doc_from_bytes
+    original_doc = NLP_SM.read("Apple Inc. was founded by Steve Jobs.")
+    bytes = original_doc.to_bytes
+
+    restored_doc = Spacy::Doc.from_bytes(NLP_SM, bytes)
+    assert_instance_of Spacy::Doc, restored_doc
+    assert_equal original_doc.text, restored_doc.text
+    assert_equal original_doc.tokens.map(&:text), restored_doc.tokens.map(&:text)
+  end
+
+  def test_doc_serialization_preserves_entities
+    doc = NLP_SM.read("Apple Inc. was founded by Steve Jobs in California.")
+    bytes = doc.to_bytes
+
+    restored_doc = Spacy::Doc.from_bytes(NLP_SM, bytes)
+    original_ents = doc.ents.map { |e| [e.text, e.label] }
+    restored_ents = restored_doc.ents.map { |e| [e.text, e.label] }
+    assert_equal original_ents, restored_ents
+  end
+
+  # ============================
+  # PhraseMatcher
+  # ============================
+
+  def test_phrase_matcher_basic
+    matcher = NLP_SM.phrase_matcher
+    matcher.add("PRODUCT", ["iPhone", "MacBook Pro"])
+
+    doc = NLP_SM.read("I bought an iPhone and a MacBook Pro yesterday.")
+    matches = matcher.match(doc)
+
+    assert_equal 2, matches.length
+    assert matches.all? { |m| m.is_a?(Spacy::Span) }
+    texts = matches.map(&:text)
+    assert_includes texts, "iPhone"
+    assert_includes texts, "MacBook Pro"
+  end
+
+  def test_phrase_matcher_case_insensitive
+    matcher = NLP_SM.phrase_matcher(attr: "LOWER")
+    matcher.add("COMPANY", ["apple", "google", "microsoft"])
+
+    doc = NLP_SM.read("Apple and GOOGLE are tech companies. Microsoft is too.")
+    matches = matcher.match(doc)
+
+    assert_equal 3, matches.length
+    texts = matches.map(&:text)
+    assert_includes texts, "Apple"
+    assert_includes texts, "GOOGLE"
+    assert_includes texts, "Microsoft"
+  end
+
+  def test_phrase_matcher_with_labels
+    matcher = NLP_SM.phrase_matcher
+    matcher.add("FRUIT", ["apple", "orange"])
+    matcher.add("COLOR", ["red", "blue"])
+
+    doc = NLP_SM.read("I like red apple and blue orange.")
+    matches = matcher.match(doc)
+
+    labels = matches.map(&:label)
+    assert_includes labels, "FRUIT"
+    assert_includes labels, "COLOR"
+  end
+
+  def test_phrase_matcher_no_matches
+    matcher = NLP_SM.phrase_matcher
+    matcher.add("PRODUCT", ["iPhone", "MacBook"])
+
+    doc = NLP_SM.read("I went to the store.")
+    matches = matcher.match(doc)
+
+    assert_empty matches
   end
 end

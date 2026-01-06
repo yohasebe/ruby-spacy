@@ -13,10 +13,11 @@
 | ✅ | Access to pre-trained word vectors                 |
 | ✅ | OpenAI Chat/Completion/Embeddings API integration  |
 
-Current Version: `0.2.3`
+Current Version: `0.3.0`
 
-- spaCy 3.7.0 supported
-- OpenAI API integration
+- Ruby 4.0 supported
+- spaCy 3.8 supported
+- OpenAI GPT-5 API integration
 
 ## Installation of Prerequisites
 
@@ -522,12 +523,73 @@ Output:
 | 9    | アルザス       | 0.5644999742507935 |
 | 10   | 南仏           | 0.5547999739646912 |
 
+### PhraseMatcher
+
+`PhraseMatcher` is more efficient than `Matcher` for matching large terminology lists. It's ideal for extracting known entities like product names, company names, or domain-specific terms.
+
+**Basic usage:**
+
+```ruby
+require "ruby-spacy"
+
+nlp = Spacy::Language.new("en_core_web_sm")
+
+# Create a phrase matcher
+matcher = nlp.phrase_matcher
+matcher.add("PRODUCT", ["iPhone", "MacBook Pro", "iPad"])
+
+doc = nlp.read("I bought an iPhone and a MacBook Pro yesterday.")
+matches = matcher.match(doc)
+
+matches.each do |span|
+  puts "#{span.text} => #{span.label}"
+end
+# => iPhone => PRODUCT
+# => MacBook Pro => PRODUCT
+```
+
+**Case-insensitive matching:**
+
+```ruby
+# Use attr: "LOWER" for case-insensitive matching
+matcher = nlp.phrase_matcher(attr: "LOWER")
+matcher.add("COMPANY", ["apple", "google", "microsoft"])
+
+doc = nlp.read("Apple and GOOGLE are competitors of Microsoft.")
+matches = matcher.match(doc)
+
+matches.each do |span|
+  puts span.text
+end
+# => Apple
+# => GOOGLE
+# => Microsoft
+```
+
+**Multiple categories:**
+
+```ruby
+matcher = nlp.phrase_matcher(attr: "LOWER")
+matcher.add("TECH_COMPANY", ["apple", "google", "microsoft", "amazon"])
+matcher.add("PRODUCT", ["iphone", "pixel", "surface", "kindle"])
+
+doc = nlp.read("Apple released the new iPhone while Google announced Pixel updates.")
+matches = matcher.match(doc)
+
+matches.each do |span|
+  puts "#{span.text}: #{span.label}"
+end
+# => Apple: TECH_COMPANY
+# => iPhone: PRODUCT
+# => Google: TECH_COMPANY
+# => Pixel: PRODUCT
+```
 
 ## OpenAI API Integration
 
-> ⚠️ This feature is currently experimental. Details are subject to change. Please refer to OpenAI's [API reference](https://platform.openai.com/docs/api-reference) and [Ruby OpenAI](https://github.com/alexrudall/ruby-openai) for available parameters (`max_tokens`, `temperature`, etc).
+> ⚠️ This feature requires GPT-5 series models. Please refer to OpenAI's [API reference](https://platform.openai.com/docs/api-reference) for details. Note: GPT-5 models do not support the `temperature` parameter.
 
-Easily leverage GPT models within ruby-spacy by using an OpenAI API key. When constructing prompts for the `Doc::openai_query` method, you can incorporate the following token properties of the document. These properties are retrieved through function calls (made internally by GPT when necessary) and seamlessly integrated into your prompt. Note that function calls need `gpt-4o-mini` or greater. The available properties include:
+Easily leverage GPT models within ruby-spacy by using an OpenAI API key. When constructing prompts for the `Doc::openai_query` method, you can incorporate the following token properties of the document. These properties are retrieved through tool calls (made internally by GPT when necessary) and seamlessly integrated into your prompt. The available properties include:
 
 - `surface`
 - `lemma`
@@ -550,9 +612,8 @@ nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("The Beatles released 12 studio albums")
 
 # default parameter values
-# max_tokens: 1000
-# temperature: 0.7
-# model: "gpt-4o-mini"
+# max_completion_tokens: 1000
+# model: "gpt-5-mini"
 res1 = doc.openai_query(
   access_token: api_key,
   prompt: "Translate the text to Japanese."
@@ -576,9 +637,8 @@ nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("The Beatles were an English rock band formed in Liverpool in 1960.")
 
 # default parameter values
-# max_tokens: 1000
-# temperature: 0.7
-# model: "gpt-4o-mini"
+# max_completion_tokens: 1000
+# model: "gpt-5-mini"
 res = doc.openai_query(
   access_token: api_key,
   prompt: "Extract the topic of the document and list 10 entities (names, concepts, locations, etc.) that are relevant to the topic."
@@ -614,9 +674,8 @@ nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("The Beatles released 12 studio albums")
 
 # default parameter values
-# max_tokens: 1000
-# temperature: 0.7
-# model: "gpt-4o-mini"
+# max_completion_tokens: 1000
+# model: "gpt-5-mini"
 res = doc.openai_query(
   access_token: api_key,
   prompt: "List token data of each of the words used in the sentence. Add 'meaning' property and value (brief semantic definition) to each token data. Output as a JSON object."
@@ -692,7 +751,7 @@ Output:
 }
 ```
 
-### GPT Prompting (Generate a Syntaxt Tree using Token Properties)
+### GPT Prompting (Generate a Syntax Tree using Token Properties)
 
 Ruby code: 
 
@@ -704,11 +763,10 @@ nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("The Beatles released 12 studio albums")
 
 # default parameter values
-# max_tokens: 1000
-# temperature: 0.7
+# max_completion_tokens: 1000
+# model: "gpt-5-mini"
 res = doc.openai_query(
   access_token: api_key,
-  model: "gpt-4",
   prompt: "Generate a tree diagram from the text using given token data. Use the following bracketing style: [S [NP [Det the] [N cat]] [VP [V sat] [PP [P on] [NP the mat]]]"
 )
 puts res
@@ -747,9 +805,8 @@ nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("Vladimir Nabokov was a")
 
 # default parameter values
-# max_tokens: 1000
-# temperature: 0.7
-# model: "gpt-4o-mini"
+# max_completion_tokens: 1000
+# model: "gpt-5-mini"
 res = doc.openai_completion(access_token: api_key)
 puts res
 ```
@@ -769,7 +826,7 @@ api_key = ENV["OPENAI_API_KEY"]
 nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("Vladimir Nabokov was a Russian-American novelist, poet, translator and entomologist.")
 
-# default model: text-embedding-ada-002
+# default model: text-embedding-3-small
 res = doc.openai_embeddings(access_token: api_key)
 
 puts res
@@ -794,6 +851,47 @@ You can set a timeout for the `Spacy::Language.new` method:
 
 ```ruby
 nlp = Spacy::Language.new("en_core_web_sm", timeout: 120) # Set timeout to 120 seconds
+```
+
+### Document Serialization
+
+You can serialize processed documents to binary format for caching or storage. This is useful when you want to avoid re-processing the same text multiple times.
+
+**Saving a document:**
+
+```ruby
+require "ruby-spacy"
+
+nlp = Spacy::Language.new("en_core_web_sm")
+doc = nlp.read("Apple Inc. was founded by Steve Jobs in California.")
+
+# Serialize to binary
+bytes = doc.to_bytes
+
+# Save to file
+File.binwrite("doc_cache.bin", bytes)
+```
+
+**Restoring a document:**
+
+```ruby
+nlp = Spacy::Language.new("en_core_web_sm")
+
+# Load from file
+bytes = File.binread("doc_cache.bin")
+
+# Restore the document (all annotations are preserved)
+restored_doc = Spacy::Doc.from_bytes(nlp, bytes)
+
+puts restored_doc.text
+# => "Apple Inc. was founded by Steve Jobs in California."
+
+restored_doc.ents.each do |ent|
+  puts "#{ent.text} (#{ent.label})"
+end
+# => Apple Inc. (ORG)
+# => Steve Jobs (PERSON)
+# => California (GPE)
 ```
 
 ## Author

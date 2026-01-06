@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 require_relative "ruby-spacy/version"
+require_relative "ruby-spacy/openai_client"
 require "numpy"
-require "openai"
 require "pycall"
 require "strscan"
 require "timeout"
+require "json"
 
 begin
   PyCall.init
@@ -39,6 +40,9 @@ module Spacy
   # Python `Matcher` class object
   PyMatcher = spacy.matcher.Matcher
 
+  # Python `PhraseMatcher` class object
+  PyPhraseMatcher = spacy.matcher.PhraseMatcher
+
   # Python `displacy` object
   PyDisplacy = PyCall.import_module('spacy.displacy')
 
@@ -47,18 +51,6 @@ module Spacy
   # such as {Span#rights}, {Span#lefts} and {Span#subtree}.
   def self.generator_to_array(py_generator)
     PyCall::List.call(py_generator)
-  end
-
-  @openai_client = nil
-
-  def self.openai_client(access_token:)
-    # If @client is already set, just return it. Otherwise, create a new instance.
-    @openai_client ||= OpenAI::Client.new(access_token: access_token)
-  end
-
-  # Provide an accessor method to get the client (optional)
-  def self.client
-    @openai_client
   end
 
   # See also spaCy Python API document for [`Doc`](https://spacy.io/api/doc).
@@ -216,6 +208,30 @@ module Spacy
       py_doc.similarity(other.py_doc)
     end
 
+    # Serializes the doc to a binary string.
+    # The binary data includes all annotations (tokens, entities, etc.) and can be
+    # used to restore the doc later without re-processing.
+    # @return [String] binary representation of the doc
+    # @example Save doc to file
+    #   doc = nlp.read("Hello world")
+    #   File.binwrite("doc.bin", doc.to_bytes)
+    def to_bytes
+      @py_doc.to_bytes.force_encoding(Encoding::BINARY)
+    end
+
+    # Restores a doc from binary data created by {#to_bytes}.
+    # This is useful for caching processed documents to avoid re-processing.
+    # @param byte_string [String] binary data from {#to_bytes}
+    # @return [Doc] the restored doc
+    # @example Load doc from file
+    #   bytes = File.binread("doc.bin")
+    #   doc = Spacy::Doc.from_bytes(nlp, bytes)
+    def self.from_bytes(nlp, byte_string)
+      py_bytes = PyCall.eval("bytes(#{byte_string.bytes})")
+      py_doc = nlp.py_nlp.call("").from_bytes(py_bytes)
+      new(nlp.py_nlp, py_doc: py_doc)
+    end
+
     # Visualize the document in one of two styles: "dep" (dependencies) or "ent" (named entities).
     # @param style [String] either `dep` or `ent`
     # @param compact [Boolean] only relevant to the `dep' style
@@ -224,12 +240,26 @@ module Spacy
       PyDisplacy.render(py_doc, style: style, options: { compact: compact }, jupyter: false)
     end
 
+    # Sends a query to OpenAI's chat completion API with optional tool support.
+    # The get_tokens tool allows the model to request token-level linguistic analysis.
+    #
+    # @param access_token [String, nil] OpenAI API key (defaults to OPENAI_API_KEY env var)
+    # @param max_completion_tokens [Integer] Maximum tokens in the response
+    # @param max_tokens [Integer] Alias for max_completion_tokens (deprecated, for backward compatibility)
+    # @param temperature [Float] Sampling temperature (ignored for GPT-5 models)
+    # @param model [String] The model to use (default: gpt-5-mini)
+    # @param messages [Array<Hash>] Conversation history (for recursive tool calls)
+    # @param prompt [String, nil] System prompt for the query
+    # @return [String, nil] The model's response content
     def openai_query(access_token: nil,
-                     max_tokens: 1000,
+                     max_completion_tokens: nil,
+                     max_tokens: nil,
                      temperature: 0.7,
-                     model: "gpt-4o-mini",
+                     model: "gpt-5-mini",
                      messages: [],
                      prompt: nil)
+      # Support both max_completion_tokens and max_tokens for backward compatibility
+      max_completion_tokens ||= max_tokens || 1000
       if messages.empty?
         messages = [
           { role: "system", content: prompt },
@@ -240,110 +270,134 @@ module Spacy
       access_token ||= ENV["OPENAI_API_KEY"]
       raise "Error: OPENAI_API_KEY is not set" unless access_token
 
-      begin
-        response = Spacy.openai_client(access_token: access_token).chat(
-          parameters: {
-            model: model,
-            messages: messages,
-            max_tokens: max_tokens,
-            temperature: temperature,
-            function_call: "auto",
-            stream: false,
-            functions: [
-              {
-                name: "get_tokens",
-                description: "Tokenize given text and return a list of tokens with their attributes: surface, lemma, tag, pos (part-of-speech), dep (dependency), ent_type (entity type), and morphology",
-                "parameters": {
-                  "type": "object",
-                  "properties": {
-                    "text": {
-                      "type": "string",
-                      "description": "text to be tokenized"
-                    }
-                  },
-                  "required": ["text"]
+      # Tool definition for token analysis (GPT-5 tools API format)
+      tools = [
+        {
+          type: "function",
+          function: {
+            name: "get_tokens",
+            description: "Tokenize given text and return a list of tokens with their attributes: surface, lemma, tag, pos (part-of-speech), dep (dependency), ent_type (entity type), and morphology",
+            parameters: {
+              type: "object",
+              properties: {
+                text: {
+                  type: "string",
+                  description: "text to be tokenized"
                 }
-              }
-            ]
+              },
+              required: ["text"]
+            }
           }
-        )
+        }
+      ]
 
-        message = response.dig("choices", 0, "message")
+      client = OpenAIClient.new(access_token: access_token)
+      response = client.chat(
+        model: model,
+        messages: messages,
+        max_completion_tokens: max_completion_tokens,
+        temperature: temperature,
+        tools: tools,
+        tool_choice: "auto"
+      )
 
-        if message["role"] == "assistant" && message["function_call"]
-          messages << message
-          function_name = message.dig("function_call", "name")
-          _args = JSON.parse(message.dig("function_call", "arguments"))
+      message = response.dig("choices", 0, "message")
+
+      # Handle tool calls (GPT-5 format)
+      if message["tool_calls"] && !message["tool_calls"].empty?
+        messages << message
+
+        message["tool_calls"].each do |tool_call|
+          function_name = tool_call.dig("function", "name")
+          tool_call_id = tool_call["id"]
+
           case function_name
           when "get_tokens"
-            res = tokens.map do |t|
+            result = tokens.map do |t|
               {
-                "surface": t.text,
-                "lemma": t.lemma,
-                "pos": t.pos,
-                "tag": t.tag,
-                "dep": t.dep,
-                "ent_type": t.ent_type,
-                "morphology": t.morphology
+                surface: t.text,
+                lemma: t.lemma,
+                pos: t.pos,
+                tag: t.tag,
+                dep: t.dep,
+                ent_type: t.ent_type,
+                morphology: t.morphology
               }
             end.to_json
+
+            messages << {
+              role: "tool",
+              tool_call_id: tool_call_id,
+              content: result
+            }
           end
-          messages << { role: "system", content: res }
-          openai_query(access_token: access_token, max_tokens: max_tokens,
-                       temperature: temperature, model: model,
-                       messages: messages, prompt: prompt)
-        else
-          message["content"]
         end
-      rescue StandardError => e
-        puts "Error: OpenAI API call failed."
-        pp e.message
-        pp e.backtrace
+
+        # Recursive call to get final response after tool execution
+        openai_query(
+          access_token: access_token,
+          max_completion_tokens: max_completion_tokens,
+          temperature: temperature,
+          model: model,
+          messages: messages,
+          prompt: prompt
+        )
+      else
+        message["content"]
       end
+    rescue OpenAIClient::APIError => e
+      puts "Error: OpenAI API call failed - #{e.message}"
+      nil
     end
 
-    def openai_completion(access_token: nil, max_tokens: 1000, temperature: 0.7, model: "gpt-4o-mini")
+    # Sends a text completion request to OpenAI's chat API.
+    #
+    # @param access_token [String, nil] OpenAI API key (defaults to OPENAI_API_KEY env var)
+    # @param max_completion_tokens [Integer] Maximum tokens in the response
+    # @param max_tokens [Integer] Alias for max_completion_tokens (deprecated, for backward compatibility)
+    # @param temperature [Float] Sampling temperature (ignored for GPT-5 models)
+    # @param model [String] The model to use (default: gpt-5-mini)
+    # @return [String, nil] The completed text
+    def openai_completion(access_token: nil, max_completion_tokens: nil, max_tokens: nil, temperature: 0.7, model: "gpt-5-mini")
+      # Support both max_completion_tokens and max_tokens for backward compatibility
+      max_completion_tokens ||= max_tokens || 1000
+
       messages = [
         { role: "system", content: "Complete the text input by the user." },
         { role: "user", content: @text }
       ]
+
       access_token ||= ENV["OPENAI_API_KEY"]
       raise "Error: OPENAI_API_KEY is not set" unless access_token
 
-      begin
-        response = Spacy.openai_client(access_token: access_token).chat(
-          parameters: {
-            model: model,
-            messages: messages,
-            max_tokens: max_tokens,
-            temperature: temperature
-          }
-        )
-        response.dig("choices", 0, "message", "content")
-      rescue StandardError => e
-        puts "Error: OpenAI API call failed."
-        pp e.message
-        pp e.backtrace
-      end
+      client = OpenAIClient.new(access_token: access_token)
+      response = client.chat(
+        model: model,
+        messages: messages,
+        max_completion_tokens: max_completion_tokens,
+        temperature: temperature
+      )
+      response.dig("choices", 0, "message", "content")
+    rescue OpenAIClient::APIError => e
+      puts "Error: OpenAI API call failed - #{e.message}"
+      nil
     end
 
-    def openai_embeddings(access_token: nil, model: "text-embedding-ada-002")
+    # Generates text embeddings using OpenAI's embeddings API.
+    #
+    # @param access_token [String, nil] OpenAI API key (defaults to OPENAI_API_KEY env var)
+    # @param model [String] The embeddings model (default: text-embedding-3-small)
+    # @return [Array<Float>, nil] The embedding vector
+    def openai_embeddings(access_token: nil, model: "text-embedding-3-small")
       access_token ||= ENV["OPENAI_API_KEY"]
       raise "Error: OPENAI_API_KEY is not set" unless access_token
 
-      begin
-        response = Spacy.openai_client(access_token: access_token).embeddings(
-          parameters: {
-            model: model,
-            input: @text
-          }
-        )
-        response.dig("data", 0, "embedding")
-      rescue StandardError => e
-        puts "Error: OpenAI API call failed."
-        pp e.message
-        pp e.backtrace
-      end
+      client = OpenAIClient.new(access_token: access_token)
+      response = client.embeddings(model: model, input: @text)
+      response.dig("data", 0, "embedding")
+    rescue OpenAIClient::APIError => e
+      puts "Error: OpenAI API call failed - #{e.message}"
+      nil
     end
 
     # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
@@ -396,6 +450,18 @@ module Spacy
     # @return [Matcher]
     def matcher
       Matcher.new(@py_nlp)
+    end
+
+    # Generates a phrase matcher for the current language model.
+    # PhraseMatcher is more efficient than {Matcher} for matching large terminology lists.
+    # @param attr [String] the token attribute to match on (default: "ORTH").
+    #   Use "LOWER" for case-insensitive matching.
+    # @return [PhraseMatcher]
+    # @example
+    #   matcher = nlp.phrase_matcher(attr: "LOWER")
+    #   matcher.add("PRODUCT", ["iPhone", "MacBook Pro"])
+    def phrase_matcher(attr: "ORTH")
+      PhraseMatcher.new(self, attr: attr)
     end
 
     # A utility method to lookup a vocabulary item of the given id.
@@ -511,6 +577,54 @@ module Spacy
         start_index = triple[1].to_i
         end_index = triple[2].to_i - 1
         results << { match_id: match_id, start_index: start_index, end_index: end_index }
+      end
+      results
+    end
+  end
+
+  # See also spaCy Python API document for [`PhraseMatcher`](https://spacy.io/api/phrasematcher).
+  # PhraseMatcher is useful for efficiently matching large terminology lists.
+  # It's faster than {Matcher} when matching many phrase patterns.
+  class PhraseMatcher
+    # @return [Object] a Python `PhraseMatcher` instance accessible via `PyCall`
+    attr_reader :py_matcher
+
+    # @return [Language] the language model used by this matcher
+    attr_reader :nlp
+
+    # Creates a {PhraseMatcher} instance.
+    # @param nlp [Language] an instance of {Language} class
+    # @param attr [String] the token attribute to match on (default: "ORTH").
+    #   Use "LOWER" for case-insensitive matching.
+    # @example Case-insensitive matching
+    #   matcher = Spacy::PhraseMatcher.new(nlp, attr: "LOWER")
+    def initialize(nlp, attr: "ORTH")
+      @nlp = nlp
+      @py_matcher = PyPhraseMatcher.call(nlp.py_nlp.vocab, attr: attr)
+    end
+
+    # Adds phrase patterns to the matcher.
+    # @param label [String] a label string given to the patterns
+    # @param phrases [Array<String>] an array of phrase strings to match
+    # @example Add product names
+    #   matcher.add("PRODUCT", ["iPhone", "MacBook Pro", "iPad"])
+    def add(label, phrases)
+      patterns = phrases.map { |phrase| @nlp.py_nlp.call(phrase) }
+      @py_matcher.add(label, patterns)
+    end
+
+    # Execute the phrase match and return matching spans.
+    # @param doc [Doc] a {Doc} instance to search
+    # @return [Array<Span>] an array of {Span} objects with labels
+    # @example Find matches
+    #   matches = matcher.match(doc)
+    #   matches.each { |span| puts "#{span.text} => #{span.label}" }
+    def match(doc)
+      py_matches = @py_matcher.call(doc.py_doc, as_spans: true)
+      results = []
+      PyCall::List.call(py_matches).each do |py_span|
+        span = Span.new(doc, py_span: py_span)
+        results << span
       end
       results
     end
