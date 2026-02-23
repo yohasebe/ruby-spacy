@@ -504,4 +504,274 @@ class SpacyTest < Minitest::Test
 
     assert_empty matches
   end
+
+  # ============================
+  # New tests for improvements
+  # ============================
+
+  def test_doc_ents_returns_spans
+    doc = NLP_SM.read("Mr. Best flew to New York on Saturday morning.")
+    ents = doc.ents
+    ents.each do |ent|
+      assert_instance_of Spacy::Span, ent
+      assert_instance_of String, ent.label
+      assert_instance_of String, ent.text
+    end
+  end
+
+  def test_token_idx
+    doc = NLP_SM.read("Hello world!")
+    tokens = doc.tokens
+    assert_equal 0, tokens[0].idx
+    assert_equal 6, tokens[1].idx
+  end
+
+  def test_language_invalid_model_name
+    assert_raises(ArgumentError) do
+      Spacy::Language.new("en'; import os; os.system('echo hacked') #")
+    end
+  end
+
+  def test_openai_client_temperature_unsupported
+    client = Spacy::OpenAIClient.new(access_token: "dummy")
+    refute client.temperature_unsupported?("gpt-4o")
+    assert client.temperature_unsupported?("gpt-5-mini")
+    assert client.temperature_unsupported?("gpt-5")
+    assert client.temperature_unsupported?("o1-preview")
+    assert client.temperature_unsupported?("o3-mini")
+    assert client.temperature_unsupported?("o4-mini")
+    refute client.temperature_unsupported?("text-embedding-3-small")
+  end
+
+  def test_doc_span_negative_index
+    doc = NLP_SM.read("Give it back! He pleaded.")
+    span = doc.span(-3..-1)
+    assert_equal "He pleaded.", span.text
+  end
+
+  def test_doc_span_endless_range
+    doc = NLP_SM.read("Give it back! He pleaded.")
+    span = doc.span(4..)
+    assert_equal "He pleaded.", span.text
+  end
+
+  def test_respond_to_missing
+    doc = NLP_SM.read("Hello world")
+    token = doc.tokens.first
+    span = doc[0..1]
+    lexeme = NLP_SM.vocab("hello")
+
+    # Python attributes that exist
+    assert doc.respond_to?(:has_vector)
+    assert token.respond_to?(:is_stop)
+    assert span.respond_to?(:start)
+
+    # Ruby methods
+    assert doc.respond_to?(:tokens)
+    assert token.respond_to?(:lemma)
+    assert span.respond_to?(:label)
+    assert lexeme.respond_to?(:lower)
+  end
+
+  def test_openai_embeddings_with_dimensions
+    doc = NLP_SM.read("Test sentence.")
+    res = doc.openai_embeddings(dimensions: 256)
+    assert_instance_of Array, res
+    assert_equal 256, res.length
+  end
+
+  def test_openai_query_with_response_format
+    doc = NLP_SM.read("List three colors.")
+    res = doc.openai_query(
+      prompt: "Return a JSON object with a key 'colors' containing an array of color names from the text.",
+      response_format: { type: "json_object" }
+    )
+    assert_instance_of String, res
+    parsed = JSON.parse(res)
+    assert_instance_of Hash, parsed
+  end
+
+  def test_memory_zone
+    major, minor = Spacy::SpacyVersion.split(".").map(&:to_i)
+    if major > 3 || (major == 3 && minor >= 8)
+      NLP_SM.memory_zone do
+        doc = NLP_SM.read("Hello world")
+        assert_instance_of Spacy::Doc, doc
+      end
+    else
+      assert_raises(NotImplementedError) do
+        NLP_SM.memory_zone { }
+      end
+    end
+  end
+
+  def test_inspect_does_not_include_py_objects
+    doc = NLP_SM.read("Hello")
+    # instance_variables_to_inspect is defined for Ruby 4.0+
+    if doc.respond_to?(:instance_variables_to_inspect) && RUBY_VERSION >= "4.0"
+      inspect_str = doc.inspect
+      refute_match(/@py_doc/, inspect_str)
+      refute_match(/@py_nlp/, inspect_str)
+      assert_match(/@text/, inspect_str)
+    else
+      # On older Ruby versions, just verify the method is defined
+      assert_equal [:@text], doc.instance_variables_to_inspect
+    end
+  end
+
+  def test_span_to_s
+    doc = NLP_SM.read("Hello world!")
+    span = doc[0..1]
+    assert_equal "Hello world", span.to_s
+    assert_equal span.text, span.to_s
+  end
+
+  # ============================
+  # Doc#linguistic_summary
+  # ============================
+
+  def test_linguistic_summary_default
+    doc = NLP_SM.read("Apple Inc. was founded by Steve Jobs.")
+    summary = doc.linguistic_summary
+    parsed = JSON.parse(summary)
+
+    assert_instance_of Hash, parsed
+    assert_equal "Apple Inc. was founded by Steve Jobs.", parsed["text"]
+    assert_instance_of Array, parsed["tokens"]
+    assert parsed["tokens"].length > 0
+    # Default token_attributes: :text, :lemma, :pos, :dep, :head
+    first_token = parsed["tokens"].first
+    assert first_token.key?("text")
+    assert first_token.key?("lemma")
+    assert first_token.key?("pos")
+    assert first_token.key?("dep")
+    assert first_token.key?("head")
+    assert_instance_of Array, parsed["entities"]
+    assert_instance_of Array, parsed["noun_chunks"]
+    # :sentences not included by default
+    refute parsed.key?("sentences")
+  end
+
+  def test_linguistic_summary_custom_sections
+    doc = NLP_SM.read("This is a test. Here is another sentence.")
+    summary = doc.linguistic_summary(sections: [:text, :sentences])
+    parsed = JSON.parse(summary)
+
+    assert parsed.key?("text")
+    assert parsed.key?("sentences")
+    assert_instance_of Array, parsed["sentences"]
+    assert_equal 2, parsed["sentences"].length
+    refute parsed.key?("tokens")
+    refute parsed.key?("entities")
+  end
+
+  def test_linguistic_summary_custom_token_attributes
+    doc = NLP_SM.read("Hello world")
+    summary = doc.linguistic_summary(
+      sections: [:tokens],
+      token_attributes: [:text, :tag, :morphology]
+    )
+    parsed = JSON.parse(summary)
+
+    first_token = parsed["tokens"].first
+    assert first_token.key?("text")
+    assert first_token.key?("tag")
+    assert first_token.key?("morphology")
+    assert_instance_of Hash, first_token["morphology"]
+    refute first_token.key?("lemma")
+    refute first_token.key?("pos")
+  end
+
+  def test_linguistic_summary_entities_contain_labels
+    doc = NLP_SM.read("Mr. Best flew to New York on Saturday morning.")
+    summary = doc.linguistic_summary(sections: [:entities])
+    parsed = JSON.parse(summary)
+
+    assert parsed["entities"].length > 0
+    parsed["entities"].each do |ent|
+      assert ent.key?("text")
+      assert ent.key?("label")
+      assert_instance_of String, ent["label"]
+    end
+  end
+
+  # ============================
+  # OpenAIHelper (API key not required)
+  # ============================
+
+  def test_with_openai_yields_helper
+    ENV.stub :[], ->(key) { key == "OPENAI_API_KEY" ? "dummy-key" : nil } do
+      NLP_SM.with_openai do |helper|
+        assert_instance_of Spacy::OpenAIHelper, helper
+        assert_equal "gpt-5-mini", helper.model
+      end
+    end
+  end
+
+  def test_with_openai_returns_block_value
+    ENV.stub :[], ->(key) { key == "OPENAI_API_KEY" ? "dummy-key" : nil } do
+      result = NLP_SM.with_openai { |_ai| 42 }
+      assert_equal 42, result
+    end
+  end
+
+  def test_openai_helper_requires_api_key
+    original = ENV["OPENAI_API_KEY"]
+    begin
+      ENV["OPENAI_API_KEY"] = nil
+      assert_raises(RuntimeError, /OPENAI_API_KEY/) do
+        Spacy::OpenAIHelper.new
+      end
+    ensure
+      ENV["OPENAI_API_KEY"] = original
+    end
+  end
+
+  # ============================
+  # OpenAI integration (API key required)
+  # ============================
+
+  def test_with_openai_chat_basic
+    result = NLP_SM.with_openai do |ai|
+      ai.chat(user: "Say 'hello' and nothing else.")
+    end
+    assert_instance_of String, result
+    assert result.length > 0
+  end
+
+  def test_with_openai_chat_with_linguistic_summary
+    doc = NLP_SM.read("Apple Inc. was founded by Steve Jobs in California.")
+    result = NLP_SM.with_openai do |ai|
+      ai.chat(
+        system: "You are a linguistic analyst. Respond with a brief analysis.",
+        user: doc.linguistic_summary
+      )
+    end
+    assert_instance_of String, result
+    assert result.length > 0
+  end
+
+  def test_with_openai_with_pipe
+    texts = ["The bank approved the loan.", "I sat on the river bank."]
+    results = NLP_SM.with_openai do |ai|
+      NLP_SM.pipe(texts).map do |doc|
+        ai.chat(
+          system: "Identify the meaning of 'bank' in one word.",
+          user: doc.linguistic_summary
+        )
+      end
+    end
+    assert_instance_of Array, results
+    assert_equal 2, results.length
+    results.each { |r| assert_instance_of String, r }
+  end
+
+  def test_with_openai_embeddings
+    result = NLP_SM.with_openai do |ai|
+      ai.embeddings("Hello world")
+    end
+    assert_instance_of Array, result
+    assert result.length > 0
+  end
+
 end

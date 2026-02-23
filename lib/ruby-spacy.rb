@@ -2,27 +2,28 @@
 
 require_relative "ruby-spacy/version"
 require_relative "ruby-spacy/openai_client"
+require_relative "ruby-spacy/openai_helper"
 require "numpy"
 require "pycall"
-require "strscan"
 require "timeout"
 require "json"
-
-begin
-  PyCall.init
-  _spacy = PyCall.import_module("spacy")
-rescue PyCall::PyError => e
-  puts "Failed to initialize PyCall or import spacy: #{e.message}"
-  puts "Python traceback:"
-  puts e.traceback
-  raise
-end
+require "base64"
 
 # This module covers the areas of spaCy functionality for _using_ many varieties of its language models, not for _building_ ones.
 module Spacy
   MAX_RETRIAL = 5
 
-  spacy = PyCall.import_module("spacy")
+  begin
+    PyCall.init
+    spacy = PyCall.import_module("spacy")
+  rescue PyCall::PyError => e
+    puts "Failed to initialize PyCall or import spacy: #{e.message}"
+    puts "Python traceback:"
+    puts e.traceback
+    raise
+  end
+
+  Builtins = PyCall.import_module("builtins")
   SpacyVersion = spacy.__version__
 
   # Python `Language` class
@@ -53,6 +54,17 @@ module Spacy
     PyCall::List.call(py_generator)
   end
 
+  # Checks if a Python object has a given attribute using builtins.hasattr.
+  # Falls back to true if the check itself fails (e.g. due to PyCall issues).
+  # @param py_obj [Object] a Python object
+  # @param attr [String, Symbol] the attribute name to check
+  # @return [Boolean]
+  def self.py_hasattr?(py_obj, attr)
+    Builtins.hasattr(py_obj, attr.to_s)
+  rescue StandardError
+    true
+  end
+
   # See also spaCy Python API document for [`Doc`](https://spacy.io/api/doc).
   class Doc
     # @return [Object] a Python `Language` instance accessible via `PyCall`
@@ -76,17 +88,19 @@ module Spacy
     # @param nlp [Language] an instance of {Language} class
     # @param py_doc [Object] an instance of Python `Doc` class
     # @param text [String] the text string to be analyzed
-    def initialize(nlp, py_doc: nil, text: nil, max_retrial: MAX_RETRIAL,
-                   retrial: 0)
+    def initialize(nlp, py_doc: nil, text: nil, max_retrial: MAX_RETRIAL)
       @py_nlp = nlp
-      @py_doc = py_doc || @py_doc = nlp.call(text)
-      @text = @py_doc.text
-    rescue StandardError
-      retrial += 1
-      raise "Error: Failed to construct a Doc object" unless retrial <= max_retrial
+      retrial = 0
+      begin
+        @py_doc = py_doc || nlp.call(text)
+        @text = @py_doc.text
+      rescue StandardError
+        retrial += 1
+        raise "Error: Failed to construct a Doc object" unless retrial <= max_retrial
 
-      sleep 0.5
-      initialize(nlp, py_doc: py_doc, text: text, max_retrial: max_retrial, retrial: retrial)
+        sleep 0.5
+        retry
+      end
     end
 
     # Retokenizes the text merging a span into a single token.
@@ -120,11 +134,7 @@ module Spacy
     # Returns an array of tokens contained in the doc.
     # @return [Array<Token>]
     def tokens
-      results = []
-      PyCall::List.call(@py_doc).each do |py_token|
-        results << Token.new(py_token)
-      end
-      results
+      PyCall::List.call(@py_doc).map { |py_token| Token.new(py_token) }
     end
 
     # Iterates over the elements in the doc yielding a token instance each time.
@@ -140,16 +150,24 @@ module Spacy
     # @param optional_size [Integer] an integer representing the size of the span
     # @return [Span]
     def span(range_or_start, optional_size = nil)
+      doc_len = PyCall.len(@py_doc)
+
       if optional_size
         start_index = range_or_start
-        temp = tokens[start_index...start_index + optional_size]
+        start_index += doc_len if start_index < 0
+        end_index = start_index + optional_size - 1
       else
-        start_index = range_or_start.first
         range = range_or_start
-        temp = tokens[range]
+        start_index = range.first
+        start_index += doc_len if start_index < 0
+        end_val = range.end
+        if end_val.nil?
+          end_index = doc_len - 1
+        else
+          end_val += doc_len if end_val < 0
+          end_index = range.exclude_end? ? end_val - 1 : end_val
+        end
       end
-
-      end_index = start_index + temp.size - 1
 
       Span.new(self, start_index: start_index, end_index: end_index)
     end
@@ -157,37 +175,25 @@ module Spacy
     # Returns an array of spans representing noun chunks.
     # @return [Array<Span>]
     def noun_chunks
-      chunk_array = []
-      py_chunks = PyCall::List.call(@py_doc.noun_chunks)
-      py_chunks.each do |py_chunk|
-        chunk_array << Span.new(self, start_index: py_chunk.start, end_index: py_chunk.end - 1)
+      PyCall::List.call(@py_doc.noun_chunks).map do |py_chunk|
+        Span.new(self, start_index: py_chunk.start, end_index: py_chunk.end - 1)
       end
-      chunk_array
     end
 
     # Returns an array of spans each representing a sentence.
     # @return [Array<Span>]
     def sents
-      sentence_array = []
-      py_sentences = PyCall::List.call(@py_doc.sents)
-      py_sentences.each do |py_sent|
-        sentence_array << Span.new(self, start_index: py_sent.start, end_index: py_sent.end - 1)
+      PyCall::List.call(@py_doc.sents).map do |py_sent|
+        Span.new(self, start_index: py_sent.start, end_index: py_sent.end - 1)
       end
-      sentence_array
     end
 
     # Returns an array of spans each representing a named entity.
     # @return [Array<Span>]
     def ents
-      # so that ents canbe "each"-ed in Ruby
-      ent_array = []
-      PyCall::List.call(@py_doc.ents).each do |ent|
-        ent.define_singleton_method :label do
-          label_
-        end
-        ent_array << ent
+      PyCall::List.call(@py_doc.ents).map do |py_span|
+        Span.new(self, py_span: py_span)
       end
-      ent_array
     end
 
     # Returns a span if given a range object; or returns a token if given an integer representing a position in the doc.
@@ -227,7 +233,8 @@ module Spacy
     #   bytes = File.binread("doc.bin")
     #   doc = Spacy::Doc.from_bytes(nlp, bytes)
     def self.from_bytes(nlp, byte_string)
-      py_bytes = PyCall.eval("bytes(#{byte_string.bytes})")
+      b64 = Base64.strict_encode64(byte_string)
+      py_bytes = PyCall.eval("__import__('base64').b64decode('#{b64}')")
       py_doc = nlp.py_nlp.call("").from_bytes(py_bytes)
       new(nlp.py_nlp, py_doc: py_doc)
     end
@@ -240,6 +247,63 @@ module Spacy
       PyDisplacy.render(py_doc, style: style, options: { compact: compact }, jupyter: false)
     end
 
+    # Generates a JSON string summarizing the linguistic analysis of the document.
+    # Designed to be passed as context to an LLM (e.g., via {OpenAIHelper#chat}).
+    #
+    # @param sections [Array<Symbol>] which sections to include
+    #   (:text, :tokens, :entities, :noun_chunks, :sentences)
+    # @param token_attributes [Array<Symbol>] which token attributes to include
+    #   (:text, :lemma, :pos, :tag, :dep, :head, :ent_type, :morphology)
+    # @return [String] a JSON string of the linguistic summary
+    def linguistic_summary(sections: [:text, :tokens, :entities, :noun_chunks],
+                           token_attributes: [:text, :lemma, :pos, :dep, :head])
+      result = {}
+
+      sections.each do |section|
+        case section
+        when :text
+          result[:text] = @text
+        when :tokens
+          result[:tokens] = tokens.map do |token|
+            token_hash = {}
+            token_attributes.each do |attr|
+              case attr
+              when :head
+                token_hash[:head] = token.head.text
+              when :morphology
+                # Use string form and parse to ensure a plain Ruby Hash for JSON serialization
+                morph_str = token.morphology(hash: false)
+                token_hash[:morphology] = if morph_str.empty?
+                                            {}
+                                          else
+                                            morph_str.split("|").each_with_object({}) do |pair, h|
+                                              k, v = pair.split("=", 2)
+                                              h[k] = v
+                                            end
+                                          end
+              else
+                token_hash[attr] = token.send(attr)
+              end
+            end
+            token_hash
+          end
+        when :entities
+          ent_list = ents
+          result[:entities] = ent_list.map do |ent|
+            { text: ent.text, label: ent.label }
+          end
+        when :noun_chunks
+          result[:noun_chunks] = noun_chunks.map do |chunk|
+            { text: chunk.text, root: chunk.root.text }
+          end
+        when :sentences
+          result[:sentences] = sents.map(&:text)
+        end
+      end
+
+      result.to_json
+    end
+
     # Sends a query to OpenAI's chat completion API with optional tool support.
     # The get_tokens tool allows the model to request token-level linguistic analysis.
     #
@@ -248,7 +312,7 @@ module Spacy
     # @param max_tokens [Integer] Alias for max_completion_tokens (deprecated, for backward compatibility)
     # @param temperature [Float] Sampling temperature (ignored for GPT-5 models)
     # @param model [String] The model to use (default: gpt-5-mini)
-    # @param messages [Array<Hash>] Conversation history (for recursive tool calls)
+    # @param messages [Array<Hash>] Conversation history (for recursive tool calls). Note: this array is modified in place when tool calls occur.
     # @param prompt [String, nil] System prompt for the query
     # @return [String, nil] The model's response content
     def openai_query(access_token: nil,
@@ -257,7 +321,10 @@ module Spacy
                      temperature: 0.7,
                      model: "gpt-5-mini",
                      messages: [],
-                     prompt: nil)
+                     prompt: nil,
+                     response_format: nil,
+                     max_tool_call_depth: 5,
+                     _tool_call_depth: 0)
       # Support both max_completion_tokens and max_tokens for backward compatibility
       max_completion_tokens ||= max_tokens || 1000
       if messages.empty?
@@ -267,38 +334,42 @@ module Spacy
         ]
       end
 
-      access_token ||= ENV["OPENAI_API_KEY"]
-      raise "Error: OPENAI_API_KEY is not set" unless access_token
+      client = openai_client(access_token)
 
       # Tool definition for token analysis (GPT-5 tools API format)
-      tools = [
-        {
-          type: "function",
-          function: {
-            name: "get_tokens",
-            description: "Tokenize given text and return a list of tokens with their attributes: surface, lemma, tag, pos (part-of-speech), dep (dependency), ent_type (entity type), and morphology",
-            parameters: {
-              type: "object",
-              properties: {
-                text: {
-                  type: "string",
-                  description: "text to be tokenized"
-                }
-              },
-              required: ["text"]
+      tools = nil
+      tool_choice = nil
+      if _tool_call_depth < max_tool_call_depth
+        tools = [
+          {
+            type: "function",
+            function: {
+              name: "get_tokens",
+              description: "Tokenize given text and return a list of tokens with their attributes: surface, lemma, tag, pos (part-of-speech), dep (dependency), ent_type (entity type), and morphology",
+              parameters: {
+                type: "object",
+                properties: {
+                  text: {
+                    type: "string",
+                    description: "text to be tokenized"
+                  }
+                },
+                required: ["text"]
+              }
             }
           }
-        }
-      ]
+        ]
+        tool_choice = "auto"
+      end
 
-      client = OpenAIClient.new(access_token: access_token)
       response = client.chat(
         model: model,
         messages: messages,
         max_completion_tokens: max_completion_tokens,
         temperature: temperature,
         tools: tools,
-        tool_choice: "auto"
+        tool_choice: tool_choice,
+        response_format: response_format
       )
 
       message = response.dig("choices", 0, "message")
@@ -340,7 +411,10 @@ module Spacy
           temperature: temperature,
           model: model,
           messages: messages,
-          prompt: prompt
+          prompt: prompt,
+          response_format: response_format,
+          max_tool_call_depth: max_tool_call_depth,
+          _tool_call_depth: _tool_call_depth + 1
         )
       else
         message["content"]
@@ -367,10 +441,7 @@ module Spacy
         { role: "user", content: @text }
       ]
 
-      access_token ||= ENV["OPENAI_API_KEY"]
-      raise "Error: OPENAI_API_KEY is not set" unless access_token
-
-      client = OpenAIClient.new(access_token: access_token)
+      client = openai_client(access_token)
       response = client.chat(
         model: model,
         messages: messages,
@@ -387,26 +458,40 @@ module Spacy
     #
     # @param access_token [String, nil] OpenAI API key (defaults to OPENAI_API_KEY env var)
     # @param model [String] The embeddings model (default: text-embedding-3-small)
+    # @param dimensions [Integer, nil] The number of dimensions for the output embeddings (nil uses model default)
     # @return [Array<Float>, nil] The embedding vector
-    def openai_embeddings(access_token: nil, model: "text-embedding-3-small")
-      access_token ||= ENV["OPENAI_API_KEY"]
-      raise "Error: OPENAI_API_KEY is not set" unless access_token
-
-      client = OpenAIClient.new(access_token: access_token)
-      response = client.embeddings(model: model, input: @text)
+    def openai_embeddings(access_token: nil, model: "text-embedding-3-small", dimensions: nil)
+      client = openai_client(access_token)
+      response = client.embeddings(model: model, input: @text, dimensions: dimensions)
       response.dig("data", 0, "embedding")
     rescue OpenAIClient::APIError => e
       puts "Error: OpenAI API call failed - #{e.message}"
       nil
     end
 
+    private
+
+    def openai_client(access_token)
+      access_token ||= ENV["OPENAI_API_KEY"]
+      raise "Error: OPENAI_API_KEY is not set" unless access_token
+
+      @openai_clients ||= {}
+      @openai_clients[access_token] ||= OpenAIClient.new(access_token: access_token)
+    end
+
+    public
+
     # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
     def method_missing(name, *args)
       @py_doc.send(name, *args)
     end
 
-    def respond_to_missing?(sym, *args)
-      sym ? true : super
+    def respond_to_missing?(sym, include_private = false)
+      Spacy.py_hasattr?(@py_doc, sym) || super
+    end
+
+    def instance_variables_to_inspect
+      [:@text]
     end
   end
 
@@ -420,8 +505,13 @@ module Spacy
 
     # Creates a language model instance, which is conventionally referred to by a variable named `nlp`.
     # @param model [String] A language model installed in the system
-    def initialize(model = "en_core_web_sm", max_retrial: MAX_RETRIAL, retrial: 0, timeout: 60)
+    def initialize(model = "en_core_web_sm", max_retrial: MAX_RETRIAL, timeout: 60)
+      unless model.to_s.match?(/\A[a-zA-Z0-9_\-\.\/]+\z/)
+        raise ArgumentError, "Invalid model name: #{model.inspect}"
+      end
+
       @spacy_nlp_id = "nlp_#{model.object_id}"
+      retrial = 0
       begin
         Timeout.timeout(timeout) do
           PyCall.exec("import spacy; #{@spacy_nlp_id} = spacy.load('#{model}')")
@@ -468,17 +558,13 @@ module Spacy
     # @param id [Integer] a vocabulary id
     # @return [Object] a Python `Lexeme` object (https://spacy.io/api/lexeme)
     def vocab_string_lookup(id)
-      PyCall.eval("#{@spacy_nlp_id}.vocab.strings[#{id}]")
+      PyCall.eval("#{@spacy_nlp_id}.vocab.strings[#{Integer(id)}]")
     end
 
     # A utility method to list pipeline components.
     # @return [Array<String>] An array of text strings representing pipeline components
     def pipe_names
-      pipe_array = []
-      PyCall::List.call(@py_nlp.pipe_names).each do |pipe|
-        pipe_array << pipe
-      end
-      pipe_array
+      PyCall::List.call(@py_nlp.pipe_names).to_a
     end
 
     # A utility method to get a Python `Lexeme` object.
@@ -527,20 +613,62 @@ module Spacy
     # @param batch_size [Integer]
     # @return [Array<Doc>]
     def pipe(texts, disable: [], batch_size: 50)
-      docs = []
-      PyCall::List.call(@py_nlp.pipe(texts, disable: disable, batch_size: batch_size)).each do |py_doc|
-        docs << Doc.new(@py_nlp, py_doc: py_doc)
+      PyCall::List.call(@py_nlp.pipe(texts, disable: disable, batch_size: batch_size)).map do |py_doc|
+        Doc.new(@py_nlp, py_doc: py_doc)
       end
-      docs
     end
 
-    # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism....
+    # Yields an {OpenAIHelper} instance for making OpenAI API calls within a block.
+    # The helper is configured once and reused for all calls within the block,
+    # making it efficient for batch processing with {#pipe}.
+    #
+    # @param access_token [String, nil] OpenAI API key (defaults to OPENAI_API_KEY env var)
+    # @param model [String] the default model for chat requests
+    # @param max_completion_tokens [Integer] default maximum tokens in responses
+    # @param temperature [Float] default sampling temperature
+    # @yield [OpenAIHelper] the helper instance for making API calls
+    # @return [Object] the block's return value
+    # @example Batch processing with pipe
+    #   nlp.with_openai(model: "gpt-5-mini") do |ai|
+    #     nlp.pipe(texts).map do |doc|
+    #       ai.chat(system: "Analyze.", user: doc.linguistic_summary)
+    #     end
+    #   end
+    def with_openai(access_token: nil, model: "gpt-5-mini",
+                    max_completion_tokens: 1000, temperature: 0.7)
+      helper = OpenAIHelper.new(
+        access_token: access_token,
+        model: model,
+        max_completion_tokens: max_completion_tokens,
+        temperature: temperature
+      )
+      yield helper
+    end
+
+    # Executes a block within spaCy's memory zone for efficient memory management.
+    # Requires spaCy >= 3.8.
+    # @yield the block to execute within the memory zone
+    # @raise [NotImplementedError] if spaCy version does not support memory zones
+    def memory_zone(&block)
+      major, minor = SpacyVersion.split(".").map(&:to_i)
+      unless major > 3 || (major == 3 && minor >= 8)
+        raise NotImplementedError, "memory_zone requires spaCy >= 3.8 (current: #{SpacyVersion})"
+      end
+
+      PyCall.with(@py_nlp.memory_zone, &block)
+    end
+
+    # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
     def method_missing(name, *args)
       @py_nlp.send(name, *args)
     end
 
-    def respond_to_missing?(sym, *args)
-      sym ? true : super
+    def respond_to_missing?(sym, include_private = false)
+      Spacy.py_hasattr?(@py_nlp, sym) || super
+    end
+
+    def instance_variables_to_inspect
+      [:@spacy_nlp_id]
     end
   end
 
@@ -566,19 +694,9 @@ module Spacy
     # @param doc [Doc] an {Doc} instance
     # @return [Array<Hash{:match_id => Integer, :start_index => Integer, :end_index => Integer}>] the id of the matched pattern, the starting position, and the end position
     def match(doc)
-      str_results = @py_matcher.call(doc.py_doc).to_s
-      s = StringScanner.new(str_results[1..-2])
-      results = []
-      while s.scan_until(/(\d+), (\d+), (\d+)/)
-        next unless s.matched
-
-        triple = s.matched.split(", ")
-        match_id = triple[0].to_i
-        start_index = triple[1].to_i
-        end_index = triple[2].to_i - 1
-        results << { match_id: match_id, start_index: start_index, end_index: end_index }
+      PyCall::List.call(@py_matcher.call(doc.py_doc)).map do |py_match|
+        { match_id: py_match[0].to_i, start_index: py_match[1].to_i, end_index: py_match[2].to_i - 1 }
       end
-      results
     end
   end
 
@@ -621,12 +739,7 @@ module Spacy
     #   matches.each { |span| puts "#{span.text} => #{span.label}" }
     def match(doc)
       py_matches = @py_matcher.call(doc.py_doc, as_spans: true)
-      results = []
-      PyCall::List.call(py_matches).each do |py_span|
-        span = Span.new(doc, py_span: py_span)
-        results << span
-      end
-      results
+      PyCall::List.call(py_matches).map { |py_span| Span.new(doc, py_span: py_span) }
     end
   end
 
@@ -637,6 +750,9 @@ module Spacy
 
     # @return [Doc] the document to which the span belongs
     attr_reader :doc
+
+    # @return [String] a text string of the span
+    attr_reader :text
 
     include Enumerable
 
@@ -653,17 +769,14 @@ module Spacy
     # @param options [Hash] options (`:label`, `:kb_id`, `:vector`)
     def initialize(doc, py_span: nil, start_index: nil, end_index: nil, options: {})
       @doc = doc
-      @py_span = py_span || @py_span = PySpan.call(@doc.py_doc, start_index, end_index + 1, options)
+      @py_span = py_span || PySpan.call(@doc.py_doc, start_index, end_index + 1, options)
+      @text = @py_span.text
     end
 
     # Returns an array of tokens contained in the span.
     # @return [Array<Token>]
     def tokens
-      results = []
-      PyCall::List.call(@py_span).each do |py_token|
-        results << Token.new(py_token)
-      end
-      results
+      PyCall::List.call(@py_span).map { |py_token| Token.new(py_token) }
     end
 
     # Iterates over the elements in the span yielding a token instance each time.
@@ -676,12 +789,9 @@ module Spacy
     # Returns an array of spans of noun chunks.
     # @return [Array<Span>]
     def noun_chunks
-      chunk_array = []
-      py_chunks = PyCall::List.call(@py_span.noun_chunks)
-      py_chunks.each do |py_span|
-        chunk_array << Span.new(@doc, py_span: py_span)
+      PyCall::List.call(@py_span.noun_chunks).map do |py_span|
+        Span.new(@doc, py_span: py_span)
       end
-      chunk_array
     end
 
     # Returns the head token
@@ -693,22 +803,17 @@ module Spacy
     # Returns an array of spans that represents sentences.
     # @return [Array<Span>]
     def sents
-      sentence_array = []
-      py_sentences = PyCall::List.call(@py_span.sents)
-      py_sentences.each do |py_span|
-        sentence_array << Span.new(@doc, py_span: py_span)
+      PyCall::List.call(@py_span.sents).map do |py_span|
+        Span.new(@doc, py_span: py_span)
       end
-      sentence_array
     end
 
     # Returns an array of spans that represents named entities.
     # @return [Array<Span>]
     def ents
-      ent_array = []
-      PyCall::List.call(@py_span.ents).each do |py_span|
-        ent_array << Span.new(@doc, py_span: py_span)
+      PyCall::List.call(@py_span.ents).map do |py_span|
+        Span.new(@doc, py_span: py_span)
       end
-      ent_array
     end
 
     # Returns a span that represents the sentence that the given span is part of.
@@ -745,41 +850,25 @@ module Spacy
     # Returns tokens conjugated to the root of the span.
     # @return [Array<Token>] an array of tokens
     def conjuncts
-      conjunct_array = []
-      PyCall::List.call(@py_span.conjuncts).each do |py_conjunct|
-        conjunct_array << Token.new(py_conjunct)
-      end
-      conjunct_array
+      PyCall::List.call(@py_span.conjuncts).map { |py_conjunct| Token.new(py_conjunct) }
     end
 
     # Returns tokens that are to the left of the span, whose heads are within the span.
     # @return [Array<Token>] an array of tokens
     def lefts
-      left_array = []
-      PyCall::List.call(@py_span.lefts).each do |py_left|
-        left_array << Token.new(py_left)
-      end
-      left_array
+      PyCall::List.call(@py_span.lefts).map { |py_left| Token.new(py_left) }
     end
 
     # Returns Tokens that are to the right of the span, whose heads are within the span.
     # @return [Array<Token>] an array of Tokens
     def rights
-      right_array = []
-      PyCall::List.call(@py_span.rights).each do |py_right|
-        right_array << Token.new(py_right)
-      end
-      right_array
+      PyCall::List.call(@py_span.rights).map { |py_right| Token.new(py_right) }
     end
 
     # Returns Tokens that are within the span and tokens that descend from them.
     # @return [Array<Token>] an array of tokens
     def subtree
-      subtree_array = []
-      PyCall::List.call(@py_span.subtree).each do |py_subtree|
-        subtree_array << Token.new(py_subtree)
-      end
-      subtree_array
+      PyCall::List.call(@py_span.subtree).map { |py_subtree| Token.new(py_subtree) }
     end
 
     # Returns the label
@@ -788,13 +877,23 @@ module Spacy
       @py_span.label_
     end
 
+    # String representation of the span.
+    # @return [String]
+    def to_s
+      @text
+    end
+
     # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
     def method_missing(name, *args)
       @py_span.send(name, *args)
     end
 
-    def respond_to_missing?(sym, *args)
-      sym ? true : super
+    def respond_to_missing?(sym, include_private = false)
+      Spacy.py_hasattr?(@py_span, sym) || super
+    end
+
+    def instance_variables_to_inspect
+      [:@text]
     end
   end
 
@@ -814,6 +913,12 @@ module Spacy
       @text = @py_token.text
     end
 
+    # Returns the character offset of the token within the parent document.
+    # @return [Integer]
+    def idx
+      @py_token.idx
+    end
+
     # Returns the head token
     # @return [Token]
     def head
@@ -823,51 +928,31 @@ module Spacy
     # Returns the token in question and the tokens that descend from it.
     # @return [Array<Token>] an array of tokens
     def subtree
-      descendant_array = []
-      PyCall::List.call(@py_token.subtree).each do |descendant|
-        descendant_array << Token.new(descendant)
-      end
-      descendant_array
+      PyCall::List.call(@py_token.subtree).map { |descendant| Token.new(descendant) }
     end
 
     # Returns the token's ancestors.
     # @return [Array<Token>] an array of tokens
     def ancestors
-      ancestor_array = []
-      PyCall::List.call(@py_token.ancestors).each do |ancestor|
-        ancestor_array << Token.new(ancestor)
-      end
-      ancestor_array
+      PyCall::List.call(@py_token.ancestors).map { |ancestor| Token.new(ancestor) }
     end
 
     # Returns a sequence of the token's immediate syntactic children.
     # @return [Array<Token>] an array of tokens
     def children
-      child_array = []
-      PyCall::List.call(@py_token.children).each do |child|
-        child_array << Token.new(child)
-      end
-      child_array
+      PyCall::List.call(@py_token.children).map { |child| Token.new(child) }
     end
 
     # The leftward immediate children of the word in the syntactic dependency parse.
     # @return [Array<Token>] an array of tokens
     def lefts
-      token_array = []
-      PyCall::List.call(@py_token.lefts).each do |token|
-        token_array << Token.new(token)
-      end
-      token_array
+      PyCall::List.call(@py_token.lefts).map { |token| Token.new(token) }
     end
 
     # The rightward immediate children of the word in the syntactic dependency parse.
     # @return [Array<Token>] an array of tokens
     def rights
-      token_array = []
-      PyCall::List.call(@py_token.rights).each do |token|
-        token_array << Token.new(token)
-      end
-      token_array
+      PyCall::List.call(@py_token.rights).map { |token| Token.new(token) }
     end
 
     # String representation of the token.
@@ -959,8 +1044,12 @@ module Spacy
       @py_token.send(name, *args)
     end
 
-    def respond_to_missing?(sym, *args)
-      sym ? true : super
+    def respond_to_missing?(sym, include_private = false)
+      Spacy.py_hasattr?(@py_token, sym) || super
+    end
+
+    def instance_variables_to_inspect
+      [:@text]
     end
   end
 
@@ -1034,8 +1123,12 @@ module Spacy
       @py_lexeme.send(name, *args)
     end
 
-    def respond_to_missing?(sym, *args)
-      sym ? true : super
+    def respond_to_missing?(sym, include_private = false)
+      Spacy.py_hasattr?(@py_lexeme, sym) || super
+    end
+
+    def instance_variables_to_inspect
+      [:@text]
     end
   end
 end

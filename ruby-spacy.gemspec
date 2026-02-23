@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec"
   spec.add_development_dependency "solargraph"
 
+  spec.add_dependency "base64" # Required for Ruby 3.4+ (moved from default to bundled gem)
   spec.add_dependency "fiddle" # Required for Ruby 4.0+ (moved from default to bundled gem)
   spec.add_dependency "numpy", "~> 0.4.0"
   spec.add_dependency "pycall", "~> 1.5.1"
