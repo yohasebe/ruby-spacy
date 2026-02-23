@@ -13,11 +13,12 @@
 | ✅ | Access to pre-trained word vectors                 |
 | ✅ | OpenAI Chat/Completion/Embeddings API integration  |
 
-Current Version: `0.3.0`
+Current Version: `0.4.0`
 
 - Ruby 4.0 supported
 - spaCy 3.8 supported
 - OpenAI GPT-5 API integration
+- Block-based OpenAI API with linguistic analysis
 
 ## Installation of Prerequisites
 
@@ -841,6 +842,65 @@ Output:
 0.012918914
 0.0012281279
 ...
+```
+
+### Block-based OpenAI API
+
+The `Language#with_openai` block API provides a streamlined way to combine spaCy's linguistic analysis with OpenAI. The `Doc#linguistic_summary` method generates a JSON summary of spaCy's analysis (tokens, entities, noun chunks, etc.) that can be passed directly to the LLM as context.
+
+**Basic usage:**
+
+```ruby
+require "ruby-spacy"
+
+nlp = Spacy::Language.new("en_core_web_sm")
+doc = nlp.read("Apple Inc. was founded by Steve Jobs in California.")
+
+nlp.with_openai(model: "gpt-5-mini") do |ai|
+  result = ai.chat(
+    system: "You are a linguistic analyst. Analyze the given linguistic data.",
+    user: doc.linguistic_summary
+  )
+  puts result
+end
+```
+
+**Batch processing with `pipe`:**
+
+```ruby
+require "ruby-spacy"
+
+nlp = Spacy::Language.new("en_core_web_sm")
+texts = ["The bank approved the loan.", "I sat on the river bank."]
+
+nlp.with_openai(model: "gpt-5-mini") do |ai|
+  nlp.pipe(texts).each do |doc|
+    result = ai.chat(
+      system: "Identify the meaning of 'bank' in one word based on the linguistic context.",
+      user: doc.linguistic_summary
+    )
+    puts "#{doc.text} => #{result}"
+  end
+end
+```
+
+**Customizing linguistic summary:**
+
+```ruby
+# Include sentences and morphology, exclude noun chunks
+summary = doc.linguistic_summary(
+  sections: [:text, :tokens, :entities, :sentences],
+  token_attributes: [:text, :lemma, :pos, :dep, :head, :morphology]
+)
+```
+
+**Embeddings:**
+
+```ruby
+nlp.with_openai do |ai|
+  vector = ai.embeddings("Hello world")
+  puts vector.length  # => 1536
+end
 ```
 
 ## Advanced Usage
