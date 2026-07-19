@@ -6,6 +6,24 @@
   are world-readable (0644 / 0755). Version 0.4.0 shipped 11 owner-only
   (0600) files, which made the gem unusable after `sudo gem install`
 
+## 0.4.0 - 2026-02-23
+### Added
+- `Language#with_openai` block API with `OpenAIHelper` for streamlined OpenAI integration
+- `Doc#linguistic_summary` for JSON-formatted spaCy analysis output
+- `Token#idx`, `Span#text`/`Span#to_s`, `Language#memory_zone` (spaCy 3.8+)
+
+### Fixed
+- `Doc#ents` returns proper `Span` objects instead of raw Python objects
+
+### Changed
+- Model name validation in `Language#initialize` for security
+- OpenAI client: temperature support for o-series models, 429 retry with
+  exponential backoff, client reuse, `dimensions`/`response_format` parameters,
+  tool call depth limit
+- Improved `respond_to_missing?` across all wrapper classes
+- Added `instance_variables_to_inspect` for Ruby 4.0+ compatibility
+- Added `base64` gem dependency (required for Ruby 3.4+)
+
 ## 0.3.0 - 2025-01-06
 ### Added
 - Ruby 4.0 support
