@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.4.1 - 2026-07-19
+### Fixed
+- Gem packaging: normalize file permissions at build time so packaged files
+  are world-readable (0644 / 0755). Version 0.4.0 shipped 11 owner-only
+  (0600) files, which made the gem unusable after `sudo gem install`
+
 ## 0.3.0 - 2025-01-06
 ### Added
 - Ruby 4.0 support

@@ -2,5 +2,5 @@
 
 module Spacy
   # The version number of the module
-  VERSION = "0.4.0"
+  VERSION = "0.4.1"
 end
