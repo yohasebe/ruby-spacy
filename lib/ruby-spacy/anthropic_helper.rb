@@ -55,7 +55,9 @@ module Spacy
     #   returned. Objects in the schema must set `additionalProperties: false`.
     # @param raw [Boolean] if true, returns the full API response Hash instead of text
     # @return [String, Hash, nil] the response text, parsed Hash (if schema:),
-    #   full response Hash (if raw:), or nil on error or refusal
+    #   full response Hash (if raw:), or nil on API error, refusal, or when
+    #   the schema output cannot be parsed as JSON (e.g., truncated by the
+    #   token limit)
     def chat(system: nil, user: nil, messages: nil,
              model: nil, max_tokens: nil, temperature: nil,
              schema: nil, raw: false)

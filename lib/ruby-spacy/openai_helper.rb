@@ -65,7 +65,8 @@ module Spacy
     #   and list all properties in `required`.
     # @param raw [Boolean] if true, returns the full API response Hash instead of text
     # @return [String, Hash, nil] the response text, parsed Hash (if schema:),
-    #   full response Hash (if raw:), or nil on error
+    #   full response Hash (if raw:), or nil on API error or when the schema
+    #   output cannot be parsed as JSON (e.g., truncated by the token limit)
     def chat(system: nil, user: nil, messages: nil,
              model: nil, max_completion_tokens: nil, max_tokens: nil,
              temperature: nil, response_format: nil, schema: nil, raw: false)

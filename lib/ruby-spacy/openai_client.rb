@@ -10,9 +10,13 @@ module Spacy
   # A custom +base_url+ makes it work with any OpenAI-compatible server
   # (Ollama, LM Studio, llama.cpp server, vLLM, OpenRouter, etc.).
   class OpenAIClient < LLMClientBase
+    # Default OpenAI API endpoint
     API_ENDPOINT = "https://api.openai.com/v1"
+    # Default model for chat requests
     DEFAULT_MODEL = "gpt-5-mini"
+    # Default model for embeddings requests
     DEFAULT_EMBEDDINGS_MODEL = "text-embedding-3-small"
+    # (see LLMClientBase::APIError)
     APIError = LLMClientBase::APIError
 
     # @param access_token [String] API key ("ollama" or any placeholder for local servers)

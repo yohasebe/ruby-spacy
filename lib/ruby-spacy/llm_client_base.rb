@@ -10,10 +10,15 @@ module Spacy
   # Implements JSON POST requests with retry on rate limits (429/529) and
   # transient network errors, using only net/http (no external dependencies).
   class LLMClientBase
+    # Default request timeout in seconds
     DEFAULT_TIMEOUT = 120
+    # Maximum number of retries for rate-limited requests and network errors
     MAX_RETRIES = 3
+    # Base delay in seconds for exponential backoff between retries
     BASE_RETRY_DELAY = 1
 
+    # Raised when an LLM API request fails after retries; carries the HTTP
+    # status code and the parsed response body when available.
     class APIError < StandardError
       attr_reader :status_code, :response_body
 

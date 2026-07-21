@@ -5,9 +5,13 @@ require_relative "llm_client_base"
 module Spacy
   # A lightweight Anthropic Messages API client without external dependencies.
   class AnthropicClient < LLMClientBase
+    # Default Anthropic API endpoint
     API_ENDPOINT = "https://api.anthropic.com/v1"
+    # Messages API version header value
     ANTHROPIC_VERSION = "2023-06-01"
+    # Default model for chat requests
     DEFAULT_MODEL = "claude-sonnet-5"
+    # (see LLMClientBase::APIError)
     APIError = LLMClientBase::APIError
 
     # @param access_token [String] Anthropic API key
