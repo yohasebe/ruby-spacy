@@ -589,7 +589,9 @@ end
 
 ## OpenAI API Integration
 
-> ⚠️ This feature requires GPT-5 series models. Please refer to OpenAI's [API reference](https://platform.openai.com/docs/api-reference) for details. Note: GPT-5 models do not support the `temperature` parameter.
+> ⚠️ This feature requires GPT-5 series models. Please refer to OpenAI's [API reference](https://platform.openai.com/docs/api-reference) for details.
+
+> ℹ️ The `temperature` parameter is sent to the API only when you specify it explicitly. If the model does not support it (e.g., GPT-5 series and o-series models), the request is automatically retried once without it — no per-model configuration is needed.
 
 Easily leverage GPT models within ruby-spacy by using an OpenAI API key. When constructing prompts for the `Doc::openai_query` method, you can incorporate the following token properties of the document. These properties are retrieved through tool calls (made internally by GPT when necessary) and seamlessly integrated into your prompt. The available properties include:
 
@@ -964,6 +966,8 @@ result = nlp.with_llm(provider: :openai) do |ai|
 end
 result["entities"].each { |ent| puts "#{ent["text"]} (#{ent["label"]})" }
 ```
+
+**Note on `temperature`:** for all providers, `temperature` is omitted from requests unless you pass it explicitly (`ai.chat(user: "...", temperature: 0.3)`). Models that reject the parameter (e.g., GPT-5 series, o-series, and current Claude models) are automatically retried once without it, so any model works without per-model configuration.
 
 See `examples/llm/` for complete scripts, including a spaCy-vs-LLM NER comparison.
 
