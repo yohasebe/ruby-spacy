@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "socket"
 
 NLP_SM = Spacy::Language.new("en_core_web_sm")
 NLP_LG = Spacy::Language.new("en_core_web_lg")
@@ -532,17 +533,6 @@ class SpacyTest < Minitest::Test
     end
   end
 
-  def test_openai_client_temperature_unsupported
-    client = Spacy::OpenAIClient.new(access_token: "dummy")
-    refute client.temperature_unsupported?("gpt-4o")
-    assert client.temperature_unsupported?("gpt-5-mini")
-    assert client.temperature_unsupported?("gpt-5")
-    assert client.temperature_unsupported?("o1-preview")
-    assert client.temperature_unsupported?("o3-mini")
-    assert client.temperature_unsupported?("o4-mini")
-    refute client.temperature_unsupported?("text-embedding-3-small")
-  end
-
   def test_doc_span_negative_index
     doc = NLP_SM.read("Give it back! He pleaded.")
     span = doc.span(-3..-1)
@@ -772,6 +762,166 @@ class SpacyTest < Minitest::Test
     end
     assert_instance_of Array, result
     assert result.length > 0
+  end
+
+  def test_with_openai_chat_schema
+    schema = {
+      type: "object",
+      properties: { greeting: { type: "string" } },
+      required: ["greeting"],
+      additionalProperties: false
+    }
+    result = NLP_SM.with_openai do |ai|
+      ai.chat(user: "Greet me in one word.", schema: schema)
+    end
+    assert_instance_of Hash, result
+    assert_instance_of String, result["greeting"]
+  end
+
+  # ============================
+  # LLM providers (API key not required)
+  # ============================
+
+  def test_with_llm_openai_yields_openai_helper
+    ENV.stub :[], ->(key) { key == "OPENAI_API_KEY" ? "dummy-key" : nil } do
+      NLP_SM.with_llm(provider: :openai) do |helper|
+        assert_instance_of Spacy::OpenAIHelper, helper
+      end
+    end
+  end
+
+  def test_with_llm_anthropic_yields_anthropic_helper
+    NLP_SM.with_llm(provider: :anthropic, access_token: "dummy-key") do |helper|
+      assert_instance_of Spacy::AnthropicHelper, helper
+      assert_equal "claude-opus-4-8", helper.model
+    end
+  end
+
+  def test_with_llm_ollama_needs_no_api_key
+    ENV.stub :[], ->(_key) { nil } do
+      NLP_SM.with_llm(provider: :ollama, model: "llama3.2") do |helper|
+        assert_instance_of Spacy::OpenAIHelper, helper
+        assert_equal "llama3.2", helper.model
+      end
+    end
+  end
+
+  def test_with_llm_unknown_provider_raises
+    assert_raises(ArgumentError) do
+      NLP_SM.with_llm(provider: :nonexistent) { |_helper| }
+    end
+  end
+
+  def test_anthropic_helper_requires_api_key
+    original = ENV["ANTHROPIC_API_KEY"]
+    begin
+      ENV["ANTHROPIC_API_KEY"] = nil
+      assert_raises(RuntimeError, /ANTHROPIC_API_KEY/) do
+        Spacy::AnthropicHelper.new
+      end
+    ensure
+      ENV["ANTHROPIC_API_KEY"] = original
+    end
+  end
+
+  def test_anthropic_embeddings_not_supported
+    helper = Spacy::AnthropicHelper.new(access_token: "dummy-key")
+    assert_raises(NotImplementedError) { helper.embeddings("Hello") }
+  end
+
+  # ============================
+  # LLM clients against a local stub server (no network / API key)
+  # ============================
+
+  # Serves the given [status, body_hash] responses sequentially over HTTP.
+  def with_stub_llm_server(responses)
+    server = TCPServer.new("127.0.0.1", 0)
+    port = server.addr[1]
+    thread = Thread.new do
+      responses.each do |status, body|
+        client = server.accept
+        content_length = 0
+        while (line = client.gets)
+          break if line == "\r\n"
+
+          content_length = line.split(":", 2)[1].to_i if line.downcase.start_with?("content-length")
+        end
+        client.read(content_length) if content_length.positive?
+        json = body.to_json
+        client.write("HTTP/1.1 #{status} X\r\nContent-Type: application/json\r\n" \
+                     "Content-Length: #{json.bytesize}\r\nConnection: close\r\n\r\n#{json}")
+        client.close
+      end
+    end
+    yield port
+  ensure
+    thread&.join(2)
+    server&.close
+  end
+
+  def test_openai_client_custom_base_url
+    chat_response = { "choices" => [{ "message" => { "content" => "hello from stub" } }] }
+    with_stub_llm_server([[200, chat_response]]) do |port|
+      client = Spacy::OpenAIClient.new(access_token: "dummy",
+                                       base_url: "http://127.0.0.1:#{port}/v1")
+      response = client.chat(model: "stub-model", messages: [{ role: "user", content: "hi" }])
+      assert_equal "hello from stub", response.dig("choices", 0, "message", "content")
+    end
+  end
+
+  def test_openai_client_retries_without_temperature_on_rejection
+    error_response = { "error" => { "message" => "Unsupported parameter: 'temperature' is not supported." } }
+    chat_response = { "choices" => [{ "message" => { "content" => "ok" } }] }
+    with_stub_llm_server([[400, error_response], [200, chat_response]]) do |port|
+      client = Spacy::OpenAIClient.new(access_token: "dummy",
+                                       base_url: "http://127.0.0.1:#{port}/v1")
+      response = nil
+      capture_io do
+        response = client.chat(model: "stub-model", temperature: 0.7,
+                               messages: [{ role: "user", content: "hi" }])
+      end
+      assert_equal "ok", response.dig("choices", 0, "message", "content")
+    end
+  end
+
+  def test_anthropic_client_custom_base_url
+    api_response = { "content" => [{ "type" => "text", "text" => "claude stub" }], "stop_reason" => "end_turn" }
+    with_stub_llm_server([[200, api_response]]) do |port|
+      client = Spacy::AnthropicClient.new(access_token: "dummy",
+                                          base_url: "http://127.0.0.1:#{port}/v1")
+      response = client.messages(model: "stub-model", messages: [{ role: "user", content: "hi" }])
+      assert_equal "claude stub", response["content"][0]["text"]
+    end
+  end
+
+  # ============================
+  # Anthropic integration (ANTHROPIC_API_KEY required)
+  # ============================
+
+  def test_with_llm_anthropic_chat
+    skip "ANTHROPIC_API_KEY not set" unless ENV["ANTHROPIC_API_KEY"]
+
+    result = NLP_SM.with_llm(provider: :anthropic) do |ai|
+      ai.chat(user: "Say 'hello' and nothing else.")
+    end
+    assert_instance_of String, result
+    assert result.length > 0
+  end
+
+  def test_with_llm_anthropic_chat_schema
+    skip "ANTHROPIC_API_KEY not set" unless ENV["ANTHROPIC_API_KEY"]
+
+    schema = {
+      type: "object",
+      properties: { greeting: { type: "string" } },
+      required: ["greeting"],
+      additionalProperties: false
+    }
+    result = NLP_SM.with_llm(provider: :anthropic) do |ai|
+      ai.chat(user: "Greet me in one word.", schema: schema)
+    end
+    assert_instance_of Hash, result
+    assert_instance_of String, result["greeting"]
   end
 
 end

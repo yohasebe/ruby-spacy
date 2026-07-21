@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
 require_relative "ruby-spacy/version"
+require_relative "ruby-spacy/llm_client_base"
 require_relative "ruby-spacy/openai_client"
+require_relative "ruby-spacy/anthropic_client"
 require_relative "ruby-spacy/openai_helper"
+require_relative "ruby-spacy/anthropic_helper"
 require "numpy"
 require "pycall"
 require "timeout"
@@ -310,7 +313,8 @@ module Spacy
     # @param access_token [String, nil] OpenAI API key (defaults to OPENAI_API_KEY env var)
     # @param max_completion_tokens [Integer] Maximum tokens in the response
     # @param max_tokens [Integer] Alias for max_completion_tokens (deprecated, for backward compatibility)
-    # @param temperature [Float] Sampling temperature (ignored for GPT-5 models)
+    # @param temperature [Float, nil] Sampling temperature (omitted from requests
+    #   when nil; models that reject it are retried without it)
     # @param model [String] The model to use (default: gpt-5-mini)
     # @param messages [Array<Hash>] Conversation history (for recursive tool calls). Note: this array is modified in place when tool calls occur.
     # @param prompt [String, nil] System prompt for the query
@@ -318,7 +322,7 @@ module Spacy
     def openai_query(access_token: nil,
                      max_completion_tokens: nil,
                      max_tokens: nil,
-                     temperature: 0.7,
+                     temperature: nil,
                      model: "gpt-5-mini",
                      messages: [],
                      prompt: nil,
@@ -429,10 +433,11 @@ module Spacy
     # @param access_token [String, nil] OpenAI API key (defaults to OPENAI_API_KEY env var)
     # @param max_completion_tokens [Integer] Maximum tokens in the response
     # @param max_tokens [Integer] Alias for max_completion_tokens (deprecated, for backward compatibility)
-    # @param temperature [Float] Sampling temperature (ignored for GPT-5 models)
+    # @param temperature [Float, nil] Sampling temperature (omitted from requests
+    #   when nil; models that reject it are retried without it)
     # @param model [String] The model to use (default: gpt-5-mini)
     # @return [String, nil] The completed text
-    def openai_completion(access_token: nil, max_completion_tokens: nil, max_tokens: nil, temperature: 0.7, model: "gpt-5-mini")
+    def openai_completion(access_token: nil, max_completion_tokens: nil, max_tokens: nil, temperature: nil, model: "gpt-5-mini")
       # Support both max_completion_tokens and max_tokens for backward compatibility
       max_completion_tokens ||= max_tokens || 1000
 
@@ -618,14 +623,56 @@ module Spacy
       end
     end
 
-    # Yields an {OpenAIHelper} instance for making OpenAI API calls within a block.
+    # Yields a provider-specific LLM helper for making API calls within a block.
     # The helper is configured once and reused for all calls within the block,
     # making it efficient for batch processing with {#pipe}.
+    #
+    # Providers:
+    # - +:openai+ — OpenAI API (or any OpenAI-compatible endpoint via +base_url:+).
+    #   Yields an {OpenAIHelper}.
+    # - +:anthropic+ — Anthropic (Claude) Messages API. Yields an {AnthropicHelper}.
+    # - +:ollama+ — shortcut for a local Ollama server
+    #   (+base_url: "http://localhost:11434/v1"+, no API key needed).
+    #   Yields an {OpenAIHelper}.
+    #
+    # @param provider [Symbol] :openai (default), :anthropic, or :ollama
+    # @param opts [Hash] helper options (access_token:, model:, max_tokens:,
+    #   temperature:, base_url:, ...) — see {OpenAIHelper#initialize} and
+    #   {AnthropicHelper#initialize}
+    # @yield [OpenAIHelper, AnthropicHelper] the helper instance for making API calls
+    # @return [Object] the block's return value
+    # @example Claude
+    #   nlp.with_llm(provider: :anthropic) do |ai|
+    #     ai.chat(system: "Analyze.", user: doc.linguistic_summary)
+    #   end
+    # @example Local model via Ollama
+    #   nlp.with_llm(provider: :ollama, model: "llama3.2") do |ai|
+    #     ai.chat(user: "Say hello.")
+    #   end
+    def with_llm(provider: :openai, **opts)
+      helper = case provider.to_sym
+               when :openai
+                 OpenAIHelper.new(**opts)
+               when :anthropic
+                 AnthropicHelper.new(**opts)
+               when :ollama
+                 OpenAIHelper.new(**{ base_url: "http://localhost:11434/v1",
+                                      access_token: "ollama" }.merge(opts))
+               else
+                 raise ArgumentError, "Unknown LLM provider: #{provider} (use :openai, :anthropic, or :ollama)"
+               end
+      yield helper
+    end
+
+    # Yields an {OpenAIHelper} instance for making OpenAI API calls within a block.
+    # Equivalent to {#with_llm} with +provider: :openai+.
     #
     # @param access_token [String, nil] OpenAI API key (defaults to OPENAI_API_KEY env var)
     # @param model [String] the default model for chat requests
     # @param max_completion_tokens [Integer] default maximum tokens in responses
-    # @param temperature [Float] default sampling temperature
+    # @param temperature [Float, nil] default sampling temperature (omitted from
+    #   requests when nil)
+    # @param base_url [String, nil] OpenAI-compatible API endpoint override
     # @yield [OpenAIHelper] the helper instance for making API calls
     # @return [Object] the block's return value
     # @example Batch processing with pipe
@@ -635,12 +682,13 @@ module Spacy
     #     end
     #   end
     def with_openai(access_token: nil, model: "gpt-5-mini",
-                    max_completion_tokens: 1000, temperature: 0.7)
+                    max_completion_tokens: 1000, temperature: nil, base_url: nil)
       helper = OpenAIHelper.new(
         access_token: access_token,
         model: model,
         max_completion_tokens: max_completion_tokens,
-        temperature: temperature
+        temperature: temperature,
+        base_url: base_url
       )
       yield helper
     end

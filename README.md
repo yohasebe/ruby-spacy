@@ -11,14 +11,15 @@
 | ✅ | Named entity recognition                           |
 | ✅ | Syntactic dependency visualization                 |
 | ✅ | Access to pre-trained word vectors                 |
-| ✅ | OpenAI Chat/Completion/Embeddings API integration  |
+| ✅ | LLM integration: OpenAI, Anthropic (Claude), and local models |
 
-Current Version: `0.4.0`
+Current Version: `0.5.0`
 
 - Ruby 4.0 supported
 - spaCy 3.8 supported
-- OpenAI GPT-5 API integration
-- Block-based OpenAI API with linguistic analysis
+- Multi-provider LLM API: OpenAI, Anthropic (Claude), and local models via Ollama or any OpenAI-compatible server
+- Structured outputs (JSON Schema) support
+- Block-based LLM API with linguistic analysis
 
 ## Installation of Prerequisites
 
@@ -902,6 +903,69 @@ nlp.with_openai do |ai|
   puts vector.length  # => 1536
 end
 ```
+
+### Multi-provider LLM API
+
+The `Language#with_llm` block API generalizes `with_openai` to multiple providers. The helper yielded to the block has the same `chat` interface for every provider.
+
+**Anthropic (Claude):**
+
+```ruby
+# Requires the ANTHROPIC_API_KEY environment variable
+nlp.with_llm(provider: :anthropic) do |ai|
+  result = ai.chat(
+    system: "You are a linguistic analyst.",
+    user: doc.linguistic_summary
+  )
+  puts result
+end
+```
+
+**Local models via Ollama (no API key needed):**
+
+```ruby
+# Requires a running Ollama server: https://ollama.com
+nlp.with_llm(provider: :ollama, model: "llama3.2") do |ai|
+  puts ai.chat(user: doc.linguistic_summary)
+end
+```
+
+Any other OpenAI-compatible server (LM Studio, llama.cpp server, vLLM, OpenRouter, etc.) works via `base_url:`:
+
+```ruby
+nlp.with_llm(provider: :openai, base_url: "http://localhost:1234/v1",
+             access_token: "not-needed", model: "your-model") do |ai|
+  puts ai.chat(user: "Hello!")
+end
+```
+
+**Structured outputs (`schema:`):** pass a JSON Schema and receive a validated, parsed Ruby Hash — useful for comparing LLM output with spaCy's analysis programmatically. Works with both `:openai` and `:anthropic`. Objects in the schema must set `additionalProperties: false`.
+
+```ruby
+schema = {
+  type: "object",
+  properties: {
+    entities: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { text: { type: "string" }, label: { type: "string" } },
+        required: %w[text label],
+        additionalProperties: false
+      }
+    }
+  },
+  required: ["entities"],
+  additionalProperties: false
+}
+
+result = nlp.with_llm(provider: :openai) do |ai|
+  ai.chat(system: "Extract named entities.", user: doc.text, schema: schema)
+end
+result["entities"].each { |ent| puts "#{ent["text"]} (#{ent["label"]})" }
+```
+
+See `examples/llm/` for complete scripts, including a spaCy-vs-LLM NER comparison.
 
 ## Advanced Usage
 

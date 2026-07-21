@@ -1,5 +1,31 @@
 # Change Log
 
+## 0.5.0 - 2026-07-21
+### Added
+- `Language#with_llm(provider:)` — provider-neutral block-based LLM API
+  supporting `:openai`, `:anthropic` (Claude), and `:ollama` (local models)
+- `AnthropicHelper` / `AnthropicClient` — Anthropic Messages API support
+  using only net/http (default model: `claude-opus-4-8`; requires
+  `ANTHROPIC_API_KEY`)
+- `base_url:` option for OpenAI client/helper — works with any
+  OpenAI-compatible server (Ollama, LM Studio, llama.cpp server, vLLM,
+  OpenRouter, etc.)
+- `schema:` option for `chat` — Structured Outputs on both providers;
+  returns a validated, parsed Ruby Hash
+- New examples under `examples/llm/` (Anthropic, local Ollama, and a
+  spaCy-vs-LLM NER comparison with structured outputs)
+
+### Changed
+- `temperature` is now sent only when explicitly specified; if a model
+  rejects it, the request is retried once without it. The model-name
+  heuristic (`temperature_unsupported?`) has been removed, so new models
+  work without gem updates. Note: previously a default of 0.7 was sent to
+  models that supported it (also from `Doc#openai_query` /
+  `Doc#openai_completion`); now the API default applies unless you pass
+  `temperature:` yourself
+- Shared HTTP layer (`LLMClientBase`) extracted from `OpenAIClient`;
+  no behavior change for existing OpenAI usage
+
 ## 0.4.1 - 2026-07-19
 ### Fixed
 - Gem packaging: normalize file permissions at build time so packaged files
