@@ -6,6 +6,7 @@ $LOAD_PATH.unshift(File.expand_path("../../lib", __dir__))
 require "ruby-spacy"
 
 # Requires the ANTHROPIC_API_KEY environment variable
+# Default model: claude-sonnet-5 (override with model: "...")
 
 nlp = Spacy::Language.new("en_core_web_sm")
 doc = nlp.read("The cat sat on the mat while the dog slept under the table.")

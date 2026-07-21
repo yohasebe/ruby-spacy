@@ -323,7 +323,7 @@ module Spacy
                      max_completion_tokens: nil,
                      max_tokens: nil,
                      temperature: nil,
-                     model: "gpt-5-mini",
+                     model: OpenAIClient::DEFAULT_MODEL,
                      messages: [],
                      prompt: nil,
                      response_format: nil,
@@ -424,7 +424,7 @@ module Spacy
         message["content"]
       end
     rescue OpenAIClient::APIError => e
-      puts "Error: OpenAI API call failed - #{e.message}"
+      warn "Error: OpenAI API call failed - #{e.message}"
       nil
     end
 
@@ -437,7 +437,7 @@ module Spacy
     #   when nil; models that reject it are retried without it)
     # @param model [String] The model to use (default: gpt-5-mini)
     # @return [String, nil] The completed text
-    def openai_completion(access_token: nil, max_completion_tokens: nil, max_tokens: nil, temperature: nil, model: "gpt-5-mini")
+    def openai_completion(access_token: nil, max_completion_tokens: nil, max_tokens: nil, temperature: nil, model: OpenAIClient::DEFAULT_MODEL)
       # Support both max_completion_tokens and max_tokens for backward compatibility
       max_completion_tokens ||= max_tokens || 1000
 
@@ -455,7 +455,7 @@ module Spacy
       )
       response.dig("choices", 0, "message", "content")
     rescue OpenAIClient::APIError => e
-      puts "Error: OpenAI API call failed - #{e.message}"
+      warn "Error: OpenAI API call failed - #{e.message}"
       nil
     end
 
@@ -465,12 +465,12 @@ module Spacy
     # @param model [String] The embeddings model (default: text-embedding-3-small)
     # @param dimensions [Integer, nil] The number of dimensions for the output embeddings (nil uses model default)
     # @return [Array<Float>, nil] The embedding vector
-    def openai_embeddings(access_token: nil, model: "text-embedding-3-small", dimensions: nil)
+    def openai_embeddings(access_token: nil, model: OpenAIClient::DEFAULT_EMBEDDINGS_MODEL, dimensions: nil)
       client = openai_client(access_token)
       response = client.embeddings(model: model, input: @text, dimensions: dimensions)
       response.dig("data", 0, "embedding")
     rescue OpenAIClient::APIError => e
-      puts "Error: OpenAI API call failed - #{e.message}"
+      warn "Error: OpenAI API call failed - #{e.message}"
       nil
     end
 
@@ -681,7 +681,7 @@ module Spacy
     #       ai.chat(system: "Analyze.", user: doc.linguistic_summary)
     #     end
     #   end
-    def with_openai(access_token: nil, model: "gpt-5-mini",
+    def with_openai(access_token: nil, model: OpenAIClient::DEFAULT_MODEL,
                     max_completion_tokens: 1000, temperature: nil, base_url: nil)
       helper = OpenAIHelper.new(
         access_token: access_token,

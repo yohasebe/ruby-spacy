@@ -7,6 +7,7 @@ module Spacy
   class AnthropicClient < LLMClientBase
     API_ENDPOINT = "https://api.anthropic.com/v1"
     ANTHROPIC_VERSION = "2023-06-01"
+    DEFAULT_MODEL = "claude-sonnet-5"
     APIError = LLMClientBase::APIError
 
     # @param access_token [String] Anthropic API key
@@ -23,7 +24,7 @@ module Spacy
     # Claude models (Opus 4.7+) reject it; the request is then retried once
     # without it.
     #
-    # @param model [String] The model to use (e.g., "claude-opus-4-8")
+    # @param model [String] The model to use (e.g., "claude-sonnet-5")
     # @param messages [Array<Hash>] The conversation messages
     # @param system [String, nil] System prompt (top-level parameter)
     # @param max_tokens [Integer] Maximum tokens in the response (required by the API)

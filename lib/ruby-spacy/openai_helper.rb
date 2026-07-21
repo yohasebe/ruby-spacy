@@ -32,7 +32,7 @@ module Spacy
     #   requests when nil; models that reject it are retried without it)
     # @param base_url [String, nil] OpenAI-compatible API endpoint
     #   (e.g., "http://localhost:11434/v1" for Ollama)
-    def initialize(access_token: nil, model: "gpt-5-mini",
+    def initialize(access_token: nil, model: OpenAIClient::DEFAULT_MODEL,
                    max_completion_tokens: 1000, max_tokens: nil,
                    temperature: nil, base_url: nil)
       @access_token = access_token || ENV["OPENAI_API_KEY"]
@@ -89,10 +89,15 @@ module Spacy
 
       return response if raw
 
-      content = response.dig("choices", 0, "message", "content")
-      schema && content ? JSON.parse(content) : content
+      choice = response.dig("choices", 0)
+      if choice&.dig("finish_reason") == "length"
+        warn "Warning: response was truncated (finish_reason: length); consider increasing max_completion_tokens"
+      end
+
+      content = choice&.dig("message", "content")
+      schema && content ? parse_json_content(content) : content
     rescue OpenAIClient::APIError => e
-      puts "Error: OpenAI API call failed - #{e.message}"
+      warn "Error: OpenAI API call failed - #{e.message}"
       nil
     end
 
@@ -102,11 +107,11 @@ module Spacy
     # @param model [String] the embeddings model
     # @param dimensions [Integer, nil] number of dimensions (nil uses model default)
     # @return [Array<Float>, nil] the embedding vector, or nil on error
-    def embeddings(text, model: "text-embedding-3-small", dimensions: nil)
+    def embeddings(text, model: OpenAIClient::DEFAULT_EMBEDDINGS_MODEL, dimensions: nil)
       response = @client.embeddings(model: model, input: text, dimensions: dimensions)
       response.dig("data", 0, "embedding")
     rescue OpenAIClient::APIError => e
-      puts "Error: OpenAI API call failed - #{e.message}"
+      warn "Error: OpenAI API call failed - #{e.message}"
       nil
     end
 
@@ -117,6 +122,13 @@ module Spacy
       msgs << { role: "system", content: system } if system
       msgs << { role: "user", content: user } if user
       msgs
+    end
+
+    def parse_json_content(text)
+      JSON.parse(text)
+    rescue JSON::ParserError
+      warn "Error: response is not valid JSON (possibly truncated output); returning nil"
+      nil
     end
   end
 end

@@ -11,6 +11,8 @@ module Spacy
   # (Ollama, LM Studio, llama.cpp server, vLLM, OpenRouter, etc.).
   class OpenAIClient < LLMClientBase
     API_ENDPOINT = "https://api.openai.com/v1"
+    DEFAULT_MODEL = "gpt-5-mini"
+    DEFAULT_EMBEDDINGS_MODEL = "text-embedding-3-small"
     APIError = LLMClientBase::APIError
 
     # @param access_token [String] API key ("ollama" or any placeholder for local servers)

@@ -5,7 +5,7 @@
 - `Language#with_llm(provider:)` — provider-neutral block-based LLM API
   supporting `:openai`, `:anthropic` (Claude), and `:ollama` (local models)
 - `AnthropicHelper` / `AnthropicClient` — Anthropic Messages API support
-  using only net/http (default model: `claude-opus-4-8`; requires
+  using only net/http (default model: `claude-sonnet-5`; requires
   `ANTHROPIC_API_KEY`)
 - `base_url:` option for OpenAI client/helper — works with any
   OpenAI-compatible server (Ollama, LM Studio, llama.cpp server, vLLM,
@@ -25,6 +25,14 @@
   `temperature:` yourself
 - Shared HTTP layer (`LLMClientBase`) extracted from `OpenAIClient`;
   no behavior change for existing OpenAI usage
+- Truncated responses (`finish_reason: length` / `stop_reason: max_tokens`)
+  now emit a warning; with `schema:`, unparseable (e.g. truncated) JSON
+  returns nil with a warning instead of raising `JSON::ParserError`
+- LLM error messages are printed to stderr (`Kernel#warn`) instead of
+  stdout, keeping stdout clean for program output
+- Default model names are now public constants:
+  `OpenAIClient::DEFAULT_MODEL`, `OpenAIClient::DEFAULT_EMBEDDINGS_MODEL`,
+  `AnthropicClient::DEFAULT_MODEL`
 
 ## 0.4.1 - 2026-07-19
 ### Fixed

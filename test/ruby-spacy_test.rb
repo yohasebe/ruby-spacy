@@ -793,7 +793,7 @@ class SpacyTest < Minitest::Test
   def test_with_llm_anthropic_yields_anthropic_helper
     NLP_SM.with_llm(provider: :anthropic, access_token: "dummy-key") do |helper|
       assert_instance_of Spacy::AnthropicHelper, helper
-      assert_equal "claude-opus-4-8", helper.model
+      assert_equal Spacy::AnthropicClient::DEFAULT_MODEL, helper.model
     end
   end
 
@@ -891,6 +891,38 @@ class SpacyTest < Minitest::Test
                                           base_url: "http://127.0.0.1:#{port}/v1")
       response = client.messages(model: "stub-model", messages: [{ role: "user", content: "hi" }])
       assert_equal "claude stub", response["content"][0]["text"]
+    end
+  end
+
+  def test_anthropic_helper_warns_on_truncation_and_returns_nil_for_invalid_json
+    api_response = { "content" => [{ "type" => "text", "text" => '{"incomplete":' }],
+                     "stop_reason" => "max_tokens" }
+    with_stub_llm_server([[200, api_response]]) do |port|
+      helper = Spacy::AnthropicHelper.new(access_token: "dummy",
+                                          base_url: "http://127.0.0.1:#{port}/v1")
+      result = :unset
+      _out, err = capture_io do
+        result = helper.chat(user: "hi", schema: { type: "object" })
+      end
+      assert_nil result
+      assert_match(/truncated/, err)
+      assert_match(/not valid JSON/, err)
+    end
+  end
+
+  def test_openai_helper_warns_on_truncation_and_returns_nil_for_invalid_json
+    chat_response = { "choices" => [{ "finish_reason" => "length",
+                                      "message" => { "content" => '{"incomplete":' } }] }
+    with_stub_llm_server([[200, chat_response]]) do |port|
+      helper = Spacy::OpenAIHelper.new(access_token: "dummy",
+                                       base_url: "http://127.0.0.1:#{port}/v1")
+      result = :unset
+      _out, err = capture_io do
+        result = helper.chat(user: "hi", schema: { type: "object" })
+      end
+      assert_nil result
+      assert_match(/truncated/, err)
+      assert_match(/not valid JSON/, err)
     end
   end
 

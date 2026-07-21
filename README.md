@@ -914,6 +914,7 @@ The `Language#with_llm` block API generalizes `with_openai` to multiple provider
 
 ```ruby
 # Requires the ANTHROPIC_API_KEY environment variable
+# Default model: claude-sonnet-5 (override with model: "...")
 nlp.with_llm(provider: :anthropic) do |ai|
   result = ai.chat(
     system: "You are a linguistic analyst.",

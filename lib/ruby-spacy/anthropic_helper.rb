@@ -25,7 +25,7 @@ module Spacy
     # @param temperature [Float, nil] default sampling temperature (omitted from
     #   requests when nil; models that reject it are retried without it)
     # @param base_url [String, nil] API endpoint override
-    def initialize(access_token: nil, model: "claude-opus-4-8",
+    def initialize(access_token: nil, model: AnthropicClient::DEFAULT_MODEL,
                    max_tokens: 1000, temperature: nil, base_url: nil)
       @access_token = access_token || ENV["ANTHROPIC_API_KEY"]
       raise "Error: ANTHROPIC_API_KEY is not set" unless @access_token
@@ -78,17 +78,21 @@ module Spacy
       # Safety classifiers can decline a request with HTTP 200 and an empty
       # or partial content array.
       if response["stop_reason"] == "refusal"
-        puts "Error: Anthropic API declined the request (stop_reason: refusal)"
+        warn "Error: Anthropic API declined the request (stop_reason: refusal)"
         return nil
+      end
+
+      if response["stop_reason"] == "max_tokens"
+        warn "Warning: response was truncated (stop_reason: max_tokens); consider increasing max_tokens"
       end
 
       text = Array(response["content"])
              .select { |block| block["type"] == "text" }
              .map { |block| block["text"] }
              .join
-      schema ? JSON.parse(text) : text
+      schema ? parse_json_content(text) : text
     rescue AnthropicClient::APIError => e
-      puts "Error: Anthropic API call failed - #{e.message}"
+      warn "Error: Anthropic API call failed - #{e.message}"
       nil
     end
 
@@ -98,6 +102,15 @@ module Spacy
       raise NotImplementedError,
             "Anthropic does not provide an embeddings API. " \
             "Use with_llm(provider: :openai) or a local OpenAI-compatible server for embeddings."
+    end
+
+    private
+
+    def parse_json_content(text)
+      JSON.parse(text)
+    rescue JSON::ParserError
+      warn "Error: response is not valid JSON (possibly truncated output); returning nil"
+      nil
     end
   end
 end
