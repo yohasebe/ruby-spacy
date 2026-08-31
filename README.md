@@ -525,6 +525,30 @@ Output:
 | 9    | アルザス       | 0.5644999742507935 |
 | 10   | 南仏           | 0.5547999739646912 |
 
+### Matcher
+
+`Matcher` finds token sequences with rule-based patterns.
+
+```ruby
+require "ruby-spacy"
+
+nlp = Spacy::Language.new("en_core_web_sm")
+
+matcher = nlp.matcher
+matcher.add("GREETING", [[{ LOWER: "hello" }, { IS_PUNCT: true }, { LOWER: "world" }]])
+
+doc = nlp.read("Hello, world!")
+matcher.match(doc).each do |match|
+  span = doc.span(match[:start_index]..match[:end_index])
+  puts "#{match[:label]}: #{span.text}"
+end
+# => GREETING: Hello, world
+```
+
+`Matcher#match` returns an array of hashes with `:match_id` (the label's numeric id), `:start_index`, `:end_index`, and `:label` (the label string).
+
+See `examples/rule_based_matching/` for more examples.
+
 ### PhraseMatcher
 
 `PhraseMatcher` is more efficient than `Matcher` for matching large terminology lists. It's ideal for extracting known entities like product names, company names, or domain-specific terms.
@@ -990,7 +1014,7 @@ You can set a timeout for the `Spacy::Language.new` method:
 nlp = Spacy::Language.new("en_core_web_sm", timeout: 120) # Set timeout to 120 seconds
 ```
 
-**Note:** the timeout does not work while a Python call is in progress, because PyCall does not release the GVL (Ruby's Global VM Lock) during Python calls and the `Timeout` watcher thread cannot run. In particular, it will not fire if loading the model hangs — exactly the situation where you would want it. Treat `timeout:` as a guard against abnormal slowness at best, not as a hang recovery mechanism.
+If the model does not finish loading within the given seconds, a `RuntimeError` is raised. Pass `timeout: nil` to wait indefinitely.
 
 ### Document Serialization
 

@@ -410,6 +410,36 @@ class SpacyTest < Minitest::Test
     assert_equal selected.map(&:text), ["like", "New", "York", "Autumn", "."]
   end
 
+  def test_token_orth_roundtrip
+    # orth is an unsigned 64-bit hash; values >= 2**62 used to come back
+    # corrupted (negative) or nil. Verify the value round-trips to the
+    # original string via vocab_string_lookup. At least one token here is
+    # expected to have a large hash (hash values are intentionally not
+    # hardcoded; they depend on spaCy's hash function)
+    doc = NLP_SM.read("apple orange banana")
+    doc.tokens.each do |token|
+      assert_equal token.text, NLP_SM.vocab_string_lookup(token.orth)
+    end
+    assert doc.tokens.any? { |t| t.orth >= 2**62 }, "expected at least one token with a hash >= 2**62"
+  end
+
+  def test_token_rank_of_oov_is_not_nil
+    # The rank of an out-of-vocabulary token is the maximum uint64 value,
+    # which used to cross the PyCall boundary as nil
+    rank = NLP_SM.read("zxqwv").tokens.first.rank
+    assert_kind_of Integer, rank
+    assert rank.positive?
+  end
+
+  def test_token_method_missing_passthrough_types
+    # Values that cannot be corrupted (booleans, small integers, Python
+    # objects, methods with arguments) must be returned as-is
+    token = NLP_SM.read("Hello world").tokens.first
+    assert_equal true, token.is_alpha
+    assert_equal 0, token.i
+    refute_nil token.nbor(1)
+  end
+
   # ============================
   # Matcher related methods
   # ============================
@@ -479,15 +509,13 @@ class SpacyTest < Minitest::Test
 
   def test_language_initialization_with_timeout
     err = assert_raises(RuntimeError) do
-      Timeout.stub :timeout, ->(*_args) { raise Timeout::Error } do
-        Spacy::Language.new("en_core_web_sm", timeout: 0.1)
-      end
+      Spacy::Language.new("en_core_web_sm", timeout: 0.05, max_retrial: 0)
     end
-    assert_match(/PyCall execution timed out after 0\.1 seconds/, err.message)
+    assert_match(/PyCall execution timed out after 0\.05 seconds/, err.message)
   end
 
   def test_language_initialization_with_retries
-    Spacy::PySpacy.stub :load, ->(*_args) { raise StandardError.new("Simulated failure") } do
+    Spacy::PyHelpers.stub :load_with_timeout, ->(*_args) { raise StandardError.new("Simulated failure") } do
       err = assert_raises(RuntimeError) do
         Spacy::Language.new("en_core_web_sm", max_retrial: 3)
       end

@@ -7,7 +7,6 @@ require_relative "ruby-spacy/anthropic_client"
 require_relative "ruby-spacy/openai_helper"
 require_relative "ruby-spacy/anthropic_helper"
 require "pycall"
-require "timeout"
 require "json"
 require "base64"
 
@@ -60,13 +59,14 @@ module Spacy
   PyDisplacy = PyCall.import_module('spacy.displacy')
 
   # Python-side helpers, kept in a dedicated module so that nothing is added to
-  # the user's `__main__` namespace. They exist because spaCy's vocabulary keys
-  # and matcher ids are unsigned 64-bit integers that do not survive the PyCall
-  # boundary in either direction: on the Python -> Ruby side, values from 2**62
-  # up to 2**63-1 are silently corrupted into negative numbers and values from
-  # 2**63 up come back as nil; on the Ruby -> Python side, passing a large Ruby
-  # Integer raises TypeError ("an integer is required"). Moving ids as decimal
-  # strings and resolving them in Python sidesteps both directions.
+  # the user's `__main__` namespace. They exist because spaCy's vocabulary keys,
+  # matcher ids, and integer attributes (e.g. `Token#orth`) are unsigned 64-bit
+  # integers that do not survive the PyCall boundary in either direction: on the
+  # Python -> Ruby side, values from 2**62 up to 2**63-1 are silently corrupted
+  # into negative numbers and values from 2**63 up come back as nil; on the
+  # Ruby -> Python side, passing a large Ruby Integer raises TypeError
+  # ("an integer is required"). Moving ids as decimal strings and resolving them
+  # in Python sidesteps both directions.
   #
   # - key_texts(nlp, keys): used by `Language#most_similar`;
   #   returns [[key_string, text], ...]
@@ -74,8 +74,18 @@ module Spacy
   #   returns the string for the given id
   # - matcher_matches(matcher, doc): used by `Matcher#match`;
   #   returns [(match_id_string, start, end, label_string), ...]
+  # - attr_or_call(obj, name, args): used by `Spacy.safe_py_send`; returns the
+  #   attribute (called with args if given), with Python ints stringified with
+  #   INT_PREFIX so they survive the PyCall boundary
+  # - load_with_timeout(model, seconds): used by `Language#initialize`; loads a
+  #   model on a Python thread and returns nil if it does not finish in time
+  #   (Ruby's Timeout cannot fire while PyCall holds the GVL)
   PyHelpers = PyCall.import_module("types").ModuleType.new("ruby_spacy_helpers")
   PyCall.exec(<<~PYTHON, globals: PyHelpers.__dict__)
+    import threading
+
+    _PREFIX = "__ruby_spacy_int__:"
+
     def key_texts(nlp, keys):
         return [[str(key), nlp.vocab[key].text] for key in keys]
 
@@ -84,7 +94,52 @@ module Spacy
 
     def matcher_matches(matcher, doc):
         return [(str(m[0]), m[1], m[2], matcher.vocab.strings[m[0]]) for m in matcher(doc)]
+
+    def attr_or_call(obj, name, args):
+        v = getattr(obj, name)
+        if args:
+            v = v(*args)
+        if type(v) is int:
+            return _PREFIX + str(v)
+        return v
+
+    def load_with_timeout(model, seconds):
+        import spacy
+        box = {}
+        def run():
+            try:
+                box["nlp"] = spacy.load(model)
+            except BaseException as e:
+                box["err"] = e
+        t = threading.Thread(target=run, daemon=True)
+        t.start()
+        t.join(seconds)
+        if t.is_alive():
+            return None
+        if "err" in box:
+            raise box["err"]
+        return box["nlp"]
   PYTHON
+
+  # Marks integer values that `PyHelpers.attr_or_call` stringified so they can
+  # survive the PyCall boundary (see the comment above `PyHelpers`)
+  INT_PREFIX = "__ruby_spacy_int__:"
+
+  # Calls an attribute or method on a Python object. spaCy exposes several
+  # unsigned 64-bit integer attributes (e.g. `Token#orth`) that are silently
+  # corrupted when they cross the PyCall boundary (see the comment above
+  # `PyHelpers`), so when the result looks corrupted (nil, or a negative
+  # Integer, which cannot occur legitimately for these ids) the value is
+  # fetched again via `PyHelpers.attr_or_call`, which stringifies ints on the
+  # Python side. Ordinary values (strings, booleans, floats, Python objects,
+  # small non-negative integers) are returned as-is.
+  def self.safe_py_send(py_obj, name, args)
+    v = py_obj.send(name, *args)
+    return v unless v.nil? || (v.is_a?(Integer) && v.negative?)
+
+    r = PyHelpers.attr_or_call(py_obj, name.to_s, args)
+    r.is_a?(String) && r.start_with?(INT_PREFIX) ? r.delete_prefix(INT_PREFIX).to_i : r
+  end
 
   # Python `numpy` module (always present as a spaCy dependency)
   PyNp = PyCall.import_module("numpy")
@@ -527,7 +582,7 @@ module Spacy
 
     # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
     def method_missing(name, *args)
-      @py_doc.send(name, *args)
+      Spacy.safe_py_send(@py_doc, name, args)
     end
 
     def respond_to_missing?(sym, include_private = false)
@@ -561,6 +616,12 @@ module Spacy
 
     # Creates a language model instance, which is conventionally referred to by a variable named `nlp`.
     # @param model [String] A language model installed in the system
+    # @param timeout [Numeric, nil] Seconds to wait for the model to load before
+    #   raising a `RuntimeError`. `nil` waits indefinitely. The timeout is
+    #   enforced on the Python side (a loading thread with `join(timeout)`)
+    #   because Ruby's `Timeout` cannot fire while PyCall holds the GVL. When it
+    #   fires, the loading thread is left running as a daemon until the process
+    #   exits (accepted: timeouts are an abnormal path).
     def initialize(model = "en_core_web_sm", max_retrial: MAX_RETRIAL, timeout: 60)
       unless model.to_s.match?(/\A[a-zA-Z0-9_\-\.\/]+\z/)
         raise ArgumentError, "Invalid model name: #{model.inspect}"
@@ -568,11 +629,7 @@ module Spacy
 
       retrial = 0
       begin
-        Timeout.timeout(timeout) do
-          @py_nlp = PySpacy.load(model)
-        end
-      rescue Timeout::Error
-        raise "PyCall execution timed out after #{timeout} seconds"
+        @py_nlp = PyHelpers.load_with_timeout(model, timeout)
       rescue StandardError => e
         retrial += 1
         if retrial <= max_retrial
@@ -582,6 +639,8 @@ module Spacy
           raise "Failed to initialize Spacy after #{max_retrial} attempts: #{e.message}"
         end
       end
+      # A timeout is not retried; it almost certainly means a hung load
+      raise "PyCall execution timed out after #{timeout} seconds" if @py_nlp.nil?
     end
 
     # Reads and analyze the given text.
@@ -757,7 +816,7 @@ module Spacy
 
     # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
     def method_missing(name, *args)
-      @py_nlp.send(name, *args)
+      Spacy.safe_py_send(@py_nlp, name, args)
     end
 
     def respond_to_missing?(sym, include_private = false)
@@ -982,7 +1041,7 @@ module Spacy
 
     # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
     def method_missing(name, *args)
-      @py_span.send(name, *args)
+      Spacy.safe_py_send(@py_span, name, args)
     end
 
     def respond_to_missing?(sym, include_private = false)
@@ -1138,7 +1197,7 @@ module Spacy
 
     # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
     def method_missing(name, *args)
-      @py_token.send(name, *args)
+      Spacy.safe_py_send(@py_token, name, args)
     end
 
     def respond_to_missing?(sym, include_private = false)
@@ -1217,7 +1276,7 @@ module Spacy
 
     # Methods defined in Python but not wrapped in ruby-spacy can be called by this dynamic method handling mechanism.
     def method_missing(name, *args)
-      @py_lexeme.send(name, *args)
+      Spacy.safe_py_send(@py_lexeme, name, args)
     end
 
     def respond_to_missing?(sym, include_private = false)
