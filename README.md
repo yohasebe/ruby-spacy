@@ -13,7 +13,7 @@
 | ✅ | Access to pre-trained word vectors                 |
 | ✅ | LLM integration: OpenAI, Anthropic (Claude), and local models |
 
-Current Version: `0.5.0`
+Current Version: `0.6.0`
 
 - Ruby 3.2 to 4.0 supported (PyCall 1.5.3 or later required)
 - spaCy 3.8 supported

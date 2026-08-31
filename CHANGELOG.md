@@ -1,5 +1,34 @@
 # Change Log
 
+## 0.6.0 - 2026-08-31
+### Added
+- GitHub Actions CI — Ruby 3.2 to 4.0 (plus ruby-head) and Python 3.11 to 3.14,
+  with a weekly run to catch breakage from new spaCy or PyCall releases
+- `:label` in `Matcher#match` results — the label string of the matched pattern
+
+### Changed
+- PyCall 1.5.3 or later is now required; earlier versions freeze the whole
+  process when Ruby's GC releases a Python object on a non-main thread, which
+  affects any threaded application (Rails, Puma, Sidekiq)
+- Minimum Ruby version raised to 3.2
+- Removed the `numpy` gem dependency; NumPy is used directly through PyCall
+- Relaxed the `terminal-table` requirement to `>= 3.0, < 5`
+- Language models are no longer stored in Python's `__main__`, so creating a
+  `Language` no longer keeps a pipeline alive until the process exits
+- README documents the thread-safety constraint (all spaCy calls must be made
+  from the thread that initialized PyCall) and the limits of
+  `Language.new(timeout:)`, which cannot interrupt a Python call in progress
+
+### Deprecated
+- `Language#spacy_nlp_id` — use `#py_nlp` instead; referencing it still works
+  but creates a Python global variable that is never released
+
+### Fixed
+- `Matcher#match` returned a corrupted `:match_id` (often `0`) for labels whose
+  hash was `2**62` or larger, since unsigned 64-bit values do not survive the
+  PyCall boundary. Ids now round-trip through `Language#vocab_string_lookup`,
+  which accepts large ids again
+
 ## 0.5.0 - 2026-07-21
 ### Added
 - `Language#with_llm(provider:)` — provider-neutral block-based LLM API
