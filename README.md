@@ -15,7 +15,7 @@
 
 Current Version: `0.5.0`
 
-- Ruby 4.0 supported
+- Ruby 3.2 to 4.0 supported (PyCall 1.5.3 or later required)
 - spaCy 3.8 supported
 - Multi-provider LLM API: OpenAI, Anthropic (Claude), and local models via Ollama or any OpenAI-compatible server
 - Structured outputs (JSON Schema) support
@@ -23,16 +23,16 @@ Current Version: `0.5.0`
 
 ## Installation of Prerequisites
 
-**IMPORTANT**: Make sure that the `enable-shared` option is enabled in your Python installation. You can use [pyenv](https://github.com/pyenv/pyenv) to install any version of Python you like. Install Python 3.10.6, for instance, using pyenv with `enable-shared` as follows:
+**IMPORTANT**: Make sure that the `enable-shared` option is enabled in your Python installation. You can use [pyenv](https://github.com/pyenv/pyenv) to install any version of Python you like. spaCy 3.8 supports Python 3.10 and later (wheels are provided for Python 3.10–3.14), so we recommend using one of those versions. Install Python 3.13, for instance, using pyenv with `enable-shared` as follows:
 
 ```shell
-$ env CONFIGURE_OPTS="--enable-shared" pyenv install 3.10.6
+$ env CONFIGURE_OPTS="--enable-shared" pyenv install 3.13
 ```
 
 Remember to make it accessible from your working directory. It is recommended that you set `global` to the version of python you just installed.
 
 ```shell
-$ pyenv global 3.10.6 
+$ pyenv global 3.13
 ```
 
 Then, install [spaCy](https://spacy.io/). If you use `pip`, the following command will do:
@@ -974,6 +974,14 @@ See `examples/llm/` for complete scripts, including a spaCy-vs-LLM NER compariso
 
 ## Advanced Usage
 
+### Thread Safety
+
+All spaCy calls must be made from the same thread that initialized PyCall (normally the main thread). Calling the spaCy pipeline from another thread — e.g. `nlp.read(text)` inside a `Thread.new` block, a Rails multi-threaded server, or a Sidekiq worker — will hang the entire process.
+
+Note that attribute access (such as `nlp.pipe_names`) works from other threads, so the failure mode is not obvious: the process only freezes when the pipeline actually runs. The root cause is currently unknown (it is specific to spaCy pipeline execution; other GIL-releasing Python calls work fine from other threads).
+
+If you need concurrent processing, serialize all Python calls onto a single dedicated thread, for example with a worker thread and a queue.
+
 ### Setting a Timeout
 
 You can set a timeout for the `Spacy::Language.new` method:
@@ -981,6 +989,8 @@ You can set a timeout for the `Spacy::Language.new` method:
 ```ruby
 nlp = Spacy::Language.new("en_core_web_sm", timeout: 120) # Set timeout to 120 seconds
 ```
+
+**Note:** the timeout does not work while a Python call is in progress, because PyCall does not release the GVL (Ruby's Global VM Lock) during Python calls and the `Timeout` watcher thread cannot run. In particular, it will not fire if loading the model hangs — exactly the situation where you would want it. Treat `timeout:` as a guard against abnormal slowness at best, not as a hang recovery mechanism.
 
 ### Document Serialization
 

@@ -4,7 +4,13 @@ require "test_helper"
 require "socket"
 
 NLP_SM = Spacy::Language.new("en_core_web_sm")
-NLP_LG = Spacy::Language.new("en_core_web_lg")
+# en_core_web_lg is large and may be absent (e.g. partial CI environments);
+# tests that depend on it are skipped when the model is not installed.
+# Checked with spacy.util.is_package so that load failures of an installed
+# model still surface as errors instead of being silently skipped.
+NLP_LG = if Spacy::PySpacy.util.is_package("en_core_web_lg")
+           Spacy::Language.new("en_core_web_lg")
+         end
 
 class SpacyTest < Minitest::Test
   def test_that_it_has_a_version_number
@@ -71,6 +77,8 @@ class SpacyTest < Minitest::Test
   end
 
   def test_doc_similarity
+    skip "en_core_web_lg not installed" unless NLP_LG
+
     apples = NLP_LG.read("I like apples")
     oranges = NLP_LG.read("I like oranges")
     apples_oranges = apples.similarity(oranges)
@@ -127,48 +135,64 @@ class SpacyTest < Minitest::Test
   end
 
   def test_doc_py_vector
+    skip "en_core_web_lg not installed" unless NLP_LG
+
     doc = NLP_LG.read("I like apples")
     assert_equal doc.vector.dtype, "float32"
     assert_equal doc.vector.shape.to_s, "(300,)"
   end
 
   def test_openai_query1
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     doc = NLP_SM.read("The Beatles were an English rock band formed in Liverpool in 1960.")
     res = doc.openai_query(prompt: "Extract the topic of the document and list 10 entities (names, concepts, locations, etc.) that are relevant to the topic.", max_tokens: 1000)
     assert_instance_of String, res
   end
 
   def test_openai_query2
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     doc = NLP_SM.read("The Beatles released 12 studio albums")
     res = doc.openai_query(prompt: "List token data of each of the words used in the sentence. Add 'meaning' property and value (brief semantic definition) to each token data. Output as a JSON object.", max_tokens: 1000)
     assert_instance_of String, res
   end
 
   def test_openai_completion
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     doc = NLP_SM.read("Vladimir Nabokov was a")
     res = doc.openai_completion
     assert_instance_of String, res
   end
 
   def test_openai_embeddings
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     doc = NLP_SM.read("Vladimir Nabokov was a Russian-American novelist, poet, translator and entomologist.")
     res = doc.openai_embeddings
     assert_instance_of Array, res
   end
 
   def test_openai_query_with_max_completion_tokens
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     doc = NLP_SM.read("Hello world")
     res = doc.openai_query(prompt: "Translate to Japanese", max_completion_tokens: 100)
     assert_instance_of String, res
   end
 
   def test_openai_completion_with_max_completion_tokens
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     doc = NLP_SM.read("Ruby is a")
     res = doc.openai_completion(max_completion_tokens: 100)
     assert_instance_of String, res
   end
 
   def test_openai_embeddings_dimensions
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     doc = NLP_SM.read("Test sentence.")
     res = doc.openai_embeddings
     assert_instance_of Array, res
@@ -178,6 +202,24 @@ class SpacyTest < Minitest::Test
   # ============================
   # Language related methods
   # ============================
+
+  def test_language_does_not_create_python_globals
+    3.times { Spacy::Language.new("en_core_web_sm") }
+    GC.start
+    keys = PyCall.eval('[k for k in list(__import__("__main__").__dict__.keys()) if k.startswith("nlp_")]')
+    assert_equal [], PyCall::List.call(keys).to_a
+  end
+
+  def test_language_spacy_nlp_id_compatibility
+    id = nil
+    _out, err = capture_io do
+      id = NLP_SM.spacy_nlp_id
+    end
+    assert_match(/DEPRECATION/, err)
+    refute_nil PyCall.eval("#{id}.vocab")
+  ensure
+    Spacy::Builtins.delattr(Spacy::PyMain, id) if id
+  end
 
   def test_language_disable_pipes
     nlp = Spacy::Language.new
@@ -194,6 +236,8 @@ class SpacyTest < Minitest::Test
   end
 
   def test_language_most_similar
+    skip "en_core_web_lg not installed" unless NLP_LG
+
     tokyo = NLP_LG.get_lexeme("Tokyo")
     japan = NLP_LG.get_lexeme("Japan")
     france = NLP_LG.get_lexeme("France")
@@ -204,6 +248,8 @@ class SpacyTest < Minitest::Test
   end
 
   def test_language_pipe
+    skip "en_core_web_lg not installed" unless NLP_LG
+
     texts = ["Imagine there's no heaven", "It's easy if you try", "No hell below us", "Above us, only sky."]
     docs = NLP_LG.pipe(texts, disable: [], batch_size: 50)
     assert docs.first.class.name, "Spacy::Doc"
@@ -242,7 +288,9 @@ class SpacyTest < Minitest::Test
   end
 
   def test_span_similarity
-    nlp = Spacy::Language.new("en_core_web_lg")
+    skip "en_core_web_lg not installed" unless NLP_LG
+
+    nlp = NLP_LG
     doc = nlp.read("green apples and red oranges")
     green_apples = doc.span(0, 2)
     red_oranges = doc.span(3, 2)
@@ -379,6 +427,30 @@ class SpacyTest < Minitest::Test
     assert_equal span.label_, "US_PRESIDENT"
   end
 
+  def test_matcher_match_id_roundtrip
+    matcher = NLP_SM.matcher
+    # Use several labels so that at least some of their string-store hashes
+    # exceed 2**62 (the exact hash values depend on spaCy's hash function,
+    # so they are intentionally not hardcoded here)
+    matcher.add("GREETING", [[{ LOWER: "hello" }, { IS_PUNCT: true }, { LOWER: "world" }]])
+    matcher.add("COMPANY", [[{ LOWER: "acme" }]])
+    matcher.add("COLOR", [[{ LOWER: "red" }]])
+
+    doc = NLP_SM.read("Hello, world! I joined Acme and painted it red.")
+    matches = matcher.match(doc)
+
+    labels = matches.map { |m| m[:label] }
+    assert_includes labels, "GREETING"
+    assert_includes labels, "COMPANY"
+    assert_includes labels, "COLOR"
+
+    # match_id must survive the round trip back to the original label string
+    # regardless of how large the underlying hash value is
+    matches.each do |m|
+      assert_equal m[:label], NLP_SM.vocab_string_lookup(m[:match_id])
+    end
+  end
+
   # ============================
   # Lexeme related methods
   # ============================
@@ -393,6 +465,8 @@ class SpacyTest < Minitest::Test
   end
 
   def test_lexeme_similarity
+    skip "en_core_web_lg not installed" unless NLP_LG
+
     lexeme_lemon = NLP_LG.vocab "lemon"
     lexeme_orange = NLP_LG.vocab "orange"
     lexeme_book = NLP_LG.vocab "book"
@@ -412,7 +486,7 @@ class SpacyTest < Minitest::Test
   end
 
   def test_language_initialization_with_retries
-    PyCall.stub :exec, ->(*_args) { raise StandardError.new("Simulated failure") } do
+    Spacy::PySpacy.stub :load, ->(*_args) { raise StandardError.new("Simulated failure") } do
       assert_raises(RuntimeError, "Failed to initialize Spacy after 3 attempts: Simulated failure") do
         Spacy::Language.new("en_core_web_sm", max_retrial: 3)
       end
@@ -564,6 +638,8 @@ class SpacyTest < Minitest::Test
   end
 
   def test_openai_embeddings_with_dimensions
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     doc = NLP_SM.read("Test sentence.")
     res = doc.openai_embeddings(dimensions: 256)
     assert_instance_of Array, res
@@ -571,6 +647,8 @@ class SpacyTest < Minitest::Test
   end
 
   def test_openai_query_with_response_format
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     doc = NLP_SM.read("List three colors.")
     res = doc.openai_query(
       prompt: "Return a JSON object with a key 'colors' containing an array of color names from the text.",
@@ -722,6 +800,8 @@ class SpacyTest < Minitest::Test
   # ============================
 
   def test_with_openai_chat_basic
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     result = NLP_SM.with_openai do |ai|
       ai.chat(user: "Say 'hello' and nothing else.")
     end
@@ -730,6 +810,8 @@ class SpacyTest < Minitest::Test
   end
 
   def test_with_openai_chat_with_linguistic_summary
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     doc = NLP_SM.read("Apple Inc. was founded by Steve Jobs in California.")
     result = NLP_SM.with_openai do |ai|
       ai.chat(
@@ -742,6 +824,8 @@ class SpacyTest < Minitest::Test
   end
 
   def test_with_openai_with_pipe
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     texts = ["The bank approved the loan.", "I sat on the river bank."]
     results = NLP_SM.with_openai do |ai|
       NLP_SM.pipe(texts).map do |doc|
@@ -757,6 +841,8 @@ class SpacyTest < Minitest::Test
   end
 
   def test_with_openai_embeddings
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     result = NLP_SM.with_openai do |ai|
       ai.embeddings("Hello world")
     end
@@ -765,6 +851,8 @@ class SpacyTest < Minitest::Test
   end
 
   def test_with_openai_chat_schema
+    skip "OPENAI_API_KEY not set" unless ENV["OPENAI_API_KEY"]
+
     schema = {
       type: "object",
       properties: { greeting: { type: "string" } },

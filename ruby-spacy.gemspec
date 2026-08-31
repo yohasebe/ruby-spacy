@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
 
   spec.homepage      = "https://github.com/yohasebe/ruby-spacy"
   spec.license       = "MIT"
-  spec.required_ruby_version = Gem::Requirement.new(">= 3.1")
+  spec.required_ruby_version = Gem::Requirement.new(">= 3.2")
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
@@ -27,15 +27,14 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "bundler"
+  spec.add_development_dependency "minitest"
   spec.add_development_dependency "rake"
-  spec.add_development_dependency "rspec"
-  spec.add_development_dependency "solargraph"
+  spec.add_development_dependency "yard"
 
   spec.add_dependency "base64" # Required for Ruby 3.4+ (moved from default to bundled gem)
   spec.add_dependency "fiddle" # Required for Ruby 4.0+ (moved from default to bundled gem)
-  spec.add_dependency "numpy", "~> 0.4.0"
-  spec.add_dependency "pycall", "~> 1.5.1"
-  spec.add_dependency "terminal-table", "~> 3.0.1"
+  spec.add_dependency "pycall", ">= 1.5.3", "< 2.0"
+  spec.add_dependency "terminal-table", ">= 3.0", "< 5"
 
   # For more information and examples about making a new gem, checkout our
   # guide at: https://bundler.io/guides/creating_gem.html

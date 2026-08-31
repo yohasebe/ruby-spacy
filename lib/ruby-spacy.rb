@@ -6,7 +6,6 @@ require_relative "ruby-spacy/openai_client"
 require_relative "ruby-spacy/anthropic_client"
 require_relative "ruby-spacy/openai_helper"
 require_relative "ruby-spacy/anthropic_helper"
-require "numpy"
 require "pycall"
 require "timeout"
 require "json"
@@ -27,6 +26,16 @@ module Spacy
   end
 
   Builtins = PyCall.import_module("builtins")
+
+  # Python `spacy` module
+  PySpacy = spacy
+
+  # Python `__main__` module (used for the deprecated `Language#spacy_nlp_id`)
+  PyMain = PyCall.import_module("__main__")
+
+  # Python `base64` module (used for `Doc.from_bytes`)
+  PyBase64 = PyCall.import_module("base64")
+
   SpacyVersion = spacy.__version__
 
   # Python `Language` class
@@ -49,6 +58,36 @@ module Spacy
 
   # Python `displacy` object
   PyDisplacy = PyCall.import_module('spacy.displacy')
+
+  # Python-side helpers, kept in a dedicated module so that nothing is added to
+  # the user's `__main__` namespace. They exist because spaCy's vocabulary keys
+  # and matcher ids are unsigned 64-bit integers that do not survive the PyCall
+  # boundary in either direction: on the Python -> Ruby side, values from 2**62
+  # up to 2**63-1 are silently corrupted into negative numbers and values from
+  # 2**63 up come back as nil; on the Ruby -> Python side, passing a large Ruby
+  # Integer raises TypeError ("an integer is required"). Moving ids as decimal
+  # strings and resolving them in Python sidesteps both directions.
+  #
+  # - key_texts(nlp, keys): used by `Language#most_similar`;
+  #   returns [[key_string, text], ...]
+  # - string_lookup(nlp, key_str): used by `Language#vocab_string_lookup`;
+  #   returns the string for the given id
+  # - matcher_matches(matcher, doc): used by `Matcher#match`;
+  #   returns [(match_id_string, start, end, label_string), ...]
+  PyHelpers = PyCall.import_module("types").ModuleType.new("ruby_spacy_helpers")
+  PyCall.exec(<<~PYTHON, globals: PyHelpers.__dict__)
+    def key_texts(nlp, keys):
+        return [[str(key), nlp.vocab[key].text] for key in keys]
+
+    def string_lookup(nlp, key_str):
+        return nlp.vocab.strings[int(key_str)]
+
+    def matcher_matches(matcher, doc):
+        return [(str(m[0]), m[1], m[2], matcher.vocab.strings[m[0]]) for m in matcher(doc)]
+  PYTHON
+
+  # Python `numpy` module (always present as a spaCy dependency)
+  PyNp = PyCall.import_module("numpy")
 
   # A utility module method to convert Python's generator object to a Ruby array,
   # mainly used on the items inside the array returned from dependency-related methods
@@ -237,7 +276,7 @@ module Spacy
     #   doc = Spacy::Doc.from_bytes(nlp, bytes)
     def self.from_bytes(nlp, byte_string)
       b64 = Base64.strict_encode64(byte_string)
-      py_bytes = PyCall.eval("__import__('base64').b64decode('#{b64}')")
+      py_bytes = PyBase64.b64decode(b64)
       py_doc = nlp.py_nlp.call("").from_bytes(py_bytes)
       new(nlp.py_nlp, py_doc: py_doc)
     end
@@ -502,11 +541,23 @@ module Spacy
 
   # See also spaCy Python API document for [`Language`](https://spacy.io/api/language).
   class Language
-    # @return [String] an identifier string that can be used to refer to the Python `Language` object inside `PyCall::exec` or `PyCall::eval`
-    attr_reader :spacy_nlp_id
-
     # @return [Object] a Python `Language` instance accessible via `PyCall`
     attr_reader :py_nlp
+
+    # @return [String] an identifier string that can be used to refer to the Python `Language` object inside `PyCall::exec` or `PyCall::eval`
+    # @deprecated The Python object is no longer stored in a global variable at
+    #   initialization time. Referencing this method creates a global variable in
+    #   Python's `__main__` on demand (which then stays alive until the process
+    #   exits). Use {#py_nlp} instead.
+    def spacy_nlp_id
+      @spacy_nlp_id ||= begin
+        warn "[DEPRECATION] `Spacy::Language#spacy_nlp_id` is deprecated. " \
+             "It creates a Python global variable that is never released; use `py_nlp` instead."
+        id = "nlp_#{@py_nlp.object_id}"
+        Builtins.setattr(PyMain, id, @py_nlp)
+        id
+      end
+    end
 
     # Creates a language model instance, which is conventionally referred to by a variable named `nlp`.
     # @param model [String] A language model installed in the system
@@ -515,13 +566,11 @@ module Spacy
         raise ArgumentError, "Invalid model name: #{model.inspect}"
       end
 
-      @spacy_nlp_id = "nlp_#{model.object_id}"
       retrial = 0
       begin
         Timeout.timeout(timeout) do
-          PyCall.exec("import spacy; #{@spacy_nlp_id} = spacy.load('#{model}')")
+          @py_nlp = PySpacy.load(model)
         end
-        @py_nlp = PyCall.eval(@spacy_nlp_id)
       rescue Timeout::Error
         raise "PyCall execution timed out after #{timeout} seconds"
       rescue StandardError => e
@@ -559,11 +608,11 @@ module Spacy
       PhraseMatcher.new(self, attr: attr)
     end
 
-    # A utility method to lookup a vocabulary item of the given id.
-    # @param id [Integer] a vocabulary id
-    # @return [Object] a Python `Lexeme` object (https://spacy.io/api/lexeme)
+    # A utility method to lookup the string of the given vocabulary id.
+    # @param id [Integer] a vocabulary id (unsigned 64-bit values are supported)
+    # @return [String] the string corresponding to the given vocabulary id
     def vocab_string_lookup(id)
-      PyCall.eval("#{@spacy_nlp_id}.vocab.strings[#{Integer(id)}]")
+      PyHelpers.string_lookup(@py_nlp, Integer(id).to_s)
     end
 
     # A utility method to list pipeline components.
@@ -590,9 +639,9 @@ module Spacy
     # @param vector [Object] A vector representation of a word (whether existing or non-existing)
     # @return [Array<Hash{:key => Integer, :text => String, :best_rows => Array<Float>, :score => Float}>] An array of hash objects each contains the `key`, `text`, `best_row` and similarity `score` of a lexeme
     def most_similar(vector, num)
-      vec_array = Numpy.asarray([vector])
+      vec_array = PyNp.asarray([vector])
       py_result = @py_nlp.vocab.vectors.most_similar(vec_array, n: num)
-      key_texts = PyCall.eval("[[str(num), #{@spacy_nlp_id}.vocab[num].text] for num in #{py_result[0][0].tolist}]")
+      key_texts = PyCall::List.call(PyHelpers.key_texts(@py_nlp, py_result[0][0].tolist))
       keys = key_texts.map { |kt| kt[0] }
       texts = key_texts.map { |kt| kt[1] }
       best_rows = PyCall::List.call(py_result[1])[0]
@@ -740,10 +789,10 @@ module Spacy
 
     # Execute the match.
     # @param doc [Doc] an {Doc} instance
-    # @return [Array<Hash{:match_id => Integer, :start_index => Integer, :end_index => Integer}>] the id of the matched pattern, the starting position, and the end position
+    # @return [Array<Hash{:match_id => Integer, :start_index => Integer, :end_index => Integer, :label => String}>] the id of the matched pattern, the starting position, the end position, and the label string of the matched pattern
     def match(doc)
-      PyCall::List.call(@py_matcher.call(doc.py_doc)).map do |py_match|
-        { match_id: py_match[0].to_i, start_index: py_match[1].to_i, end_index: py_match[2].to_i - 1 }
+      PyCall::List.call(PyHelpers.matcher_matches(@py_matcher, doc.py_doc)).map do |py_match|
+        { match_id: py_match[0].to_i, start_index: py_match[1], end_index: py_match[2] - 1, label: py_match[3] }
       end
     end
   end
