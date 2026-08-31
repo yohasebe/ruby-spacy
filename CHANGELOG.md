@@ -15,9 +15,12 @@
 - Relaxed the `terminal-table` requirement to `>= 3.0, < 5`
 - Language models are no longer stored in Python's `__main__`, so creating a
   `Language` no longer keeps a pipeline alive until the process exits
-- README documents the thread-safety constraint (all spaCy calls must be made
-  from the thread that initialized PyCall) and the limits of
-  `Language.new(timeout:)`, which cannot interrupt a Python call in progress
+- `Language.new(timeout:)` now actually fires. The wait happens on a Python
+  thread rather than through Ruby's `Timeout`, whose watcher thread cannot run
+  while PyCall holds the GVL. `timeout: nil` waits indefinitely, and a timeout
+  is never retried
+- README documents the thread-safety constraint: all spaCy calls must be made
+  from the thread that initialized PyCall
 
 ### Deprecated
 - `Language#spacy_nlp_id` — use `#py_nlp` instead; referencing it still works
@@ -28,6 +31,10 @@
   hash was `2**62` or larger, since unsigned 64-bit values do not survive the
   PyCall boundary. Ids now round-trip through `Language#vocab_string_lookup`,
   which accepts large ids again
+- Integer attributes reached through `method_missing`, such as `Token#orth`,
+  were silently corrupted for the same reason: 7 of 12 common words returned a
+  negative `orth`. They are now fetched safely, which also restores
+  `Token#rank` for out-of-vocabulary tokens
 
 ## 0.5.0 - 2026-07-21
 ### Added
