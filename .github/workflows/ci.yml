@@ -1,8 +1,9 @@
 name: CI
 
 on:
+  # Every branch, so that work in progress is tested before a pull request exists
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
   # Weekly run to detect breakage from new spaCy / PyCall / Ruby releases
   # even when the repository itself is untouched
@@ -13,6 +14,9 @@ jobs:
   test:
     name: ruby ${{ matrix.ruby }} / python ${{ matrix.python }}
     runs-on: ubuntu-latest
+    # Pull requests from this repository are already covered by the push event;
+    # only run the pull_request event for forks, to avoid duplicate matrices
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
     # This project has known hang paths (pipeline calls from non-main threads,
     # spacy.load hangs that Ruby's Timeout cannot interrupt); never let a job
     # run until GitHub's 6-hour limit
