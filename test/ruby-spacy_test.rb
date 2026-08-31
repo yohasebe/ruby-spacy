@@ -478,18 +478,20 @@ class SpacyTest < Minitest::Test
   # ============================
 
   def test_language_initialization_with_timeout
-    assert_raises(RuntimeError, "PyCall execution timed out after 0.1 seconds") do
+    err = assert_raises(RuntimeError) do
       Timeout.stub :timeout, ->(*_args) { raise Timeout::Error } do
         Spacy::Language.new("en_core_web_sm", timeout: 0.1)
       end
     end
+    assert_match(/PyCall execution timed out after 0\.1 seconds/, err.message)
   end
 
   def test_language_initialization_with_retries
     Spacy::PySpacy.stub :load, ->(*_args) { raise StandardError.new("Simulated failure") } do
-      assert_raises(RuntimeError, "Failed to initialize Spacy after 3 attempts: Simulated failure") do
+      err = assert_raises(RuntimeError) do
         Spacy::Language.new("en_core_web_sm", max_retrial: 3)
       end
+      assert_match(/Failed to initialize Spacy after 3 attempts: Simulated failure/, err.message)
     end
   end
 
@@ -787,9 +789,10 @@ class SpacyTest < Minitest::Test
     original = ENV["OPENAI_API_KEY"]
     begin
       ENV["OPENAI_API_KEY"] = nil
-      assert_raises(RuntimeError, /OPENAI_API_KEY/) do
+      err = assert_raises(RuntimeError) do
         Spacy::OpenAIHelper.new
       end
+      assert_match(/OPENAI_API_KEY/, err.message)
     ensure
       ENV["OPENAI_API_KEY"] = original
     end
@@ -904,9 +907,10 @@ class SpacyTest < Minitest::Test
     original = ENV["ANTHROPIC_API_KEY"]
     begin
       ENV["ANTHROPIC_API_KEY"] = nil
-      assert_raises(RuntimeError, /ANTHROPIC_API_KEY/) do
+      err = assert_raises(RuntimeError) do
         Spacy::AnthropicHelper.new
       end
+      assert_match(/ANTHROPIC_API_KEY/, err.message)
     ensure
       ENV["ANTHROPIC_API_KEY"] = original
     end
