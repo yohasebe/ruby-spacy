@@ -50,7 +50,7 @@ jobs:
       # gems, which compile against these system libraries
       - name: Install rsyntaxtree system dependencies (representative jobs)
         if: matrix.python == '3.13'
-        run: sudo apt-get install -y libpango1.0-dev librsvg2-dev libgirepository1.0-dev
+        run: sudo apt-get update && sudo apt-get install -y libpango1.0-dev librsvg2-dev libgirepository1.0-dev
 
       - uses: ruby/setup-ruby@v1
         with:
