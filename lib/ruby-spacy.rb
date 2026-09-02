@@ -6,6 +6,7 @@ require_relative "ruby-spacy/openai_client"
 require_relative "ruby-spacy/anthropic_client"
 require_relative "ruby-spacy/openai_helper"
 require_relative "ruby-spacy/anthropic_helper"
+require_relative "ruby-spacy/syntax_tree"
 require "pycall"
 require "json"
 require "base64"
@@ -342,6 +343,40 @@ module Spacy
     # @return [String] in the case of `dep`, the output text will be an SVG, whereas in the `ent` style, the output text will be an HTML.
     def displacy(style: "dep", compact: false)
       PyDisplacy.render(py_doc, style: style, options: { compact: compact }, jupyter: false)
+    end
+
+    # Generates a syntax tree in rsyntaxtree bracket notation, or renders it
+    # with the rsyntaxtree gem.
+    #
+    # Requires the rsyntaxtree gem (>= 2.4.0) at call time (it is a soft
+    # dependency; install it with `gem install rsyntaxtree`). The doc must
+    # contain a single sentence; for a multi-sentence doc, use
+    # `doc.sents.map { |s| s.syntax_tree }`.
+    #
+    # Note that the bracket notation is rsyntaxtree-flavored: it may contain
+    # rsyntaxtree-specific markup such as AVMs (`#(...#)`), region backgrounds
+    # (`%`), and in-word space joins (`<>`).
+    #
+    # @param format [Symbol] `:bracket` (default; the notation string),
+    #   `:svg`, `:png`, `:pdf`, `:tikz`, or `:json`. `:png` and `:pdf` return
+    #   a binary string
+    # @param style [Symbol] `:projection` (default; head-projection
+    #   phrase-structure-like tree) or `:chunks` (shallow tree with noun chunks)
+    # @param morphology [Boolean] attach a morphology AVM to each leaf
+    # @param entities [Boolean] mark chunks that match a named entity with a
+    #   colored background and the entity label
+    # @param punctuation [Boolean] keep punctuation tokens
+    # @param render_opts [Hash] rsyntaxtree drawing options (e.g. `fontsize:`).
+    #   `hyphen:` cannot be overridden
+    # @return [String] the bracket notation or the rendered output
+    # @example
+    #   doc.syntax_tree                          # => "[S [%NP [DET The] ...] ...]"
+    #   doc.syntax_tree(format: :svg)            # => "<svg ..."
+    #   doc.syntax_tree(format: :png, fontsize: 12)
+    def syntax_tree(format: :bracket, style: :projection, morphology: false,
+                    entities: true, punctuation: false, **render_opts)
+      SyntaxTree.generate(self, format: format, style: style, morphology: morphology,
+                          entities: entities, punctuation: punctuation, **render_opts)
     end
 
     # Generates a JSON string summarizing the linguistic analysis of the document.
@@ -1001,6 +1036,15 @@ module Spacy
     # @return [Doc]
     def as_doc
       Doc.new(@doc.py_nlp, text: text)
+    end
+
+    # Generates a syntax tree for the span in rsyntaxtree bracket notation, or
+    # renders it with the rsyntaxtree gem. The span must have a single root
+    # (e.g. a sentence from {Doc#sents}). See {Doc#syntax_tree} for the
+    # available options.
+    # @return [String] the bracket notation or the rendered output
+    def syntax_tree(**options)
+      SyntaxTree.generate(self, **options)
     end
 
     # Returns tokens conjugated to the root of the span.

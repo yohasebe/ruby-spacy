@@ -10,6 +10,7 @@
 | ✅ | Part-of-speech tagging and dependency parsing      |
 | ✅ | Named entity recognition                           |
 | ✅ | Syntactic dependency visualization                 |
+| ✅ | Syntax tree visualization (via rsyntaxtree)        |
 | ✅ | Access to pre-trained word vectors                 |
 | ✅ | LLM integration: OpenAI, Anthropic (Claude), and local models |
 
@@ -285,6 +286,30 @@ end
 Output:
 
 ![](https://github.com/yohasebe/ruby-spacy/blob/main/examples/get_started/outputs/test_dep_compact.svg)
+
+### Syntax Trees
+
+→ [rsyntaxtree](https://github.com/yohasebe/rsyntaxtree)
+
+`Doc#syntax_tree` (and `Span#syntax_tree`) converts the parse into [rsyntaxtree](https://github.com/yohasebe/rsyntaxtree) bracket notation and can render it as an image. rsyntaxtree (>= 2.4.0) is an optional dependency: install it with `gem install rsyntaxtree`.
+
+```ruby
+require "ruby-spacy"
+
+nlp = Spacy::Language.new("en_core_web_sm")
+doc = nlp.read("The quick brown fox jumped over the lazy dog near the river.")
+
+doc.syntax_tree                          # => "[S [%NP [DET The] [ADJ quick] ...] ...]"
+File.binwrite("tree.png", doc.syntax_tree(format: :png))
+doc.syntax_tree(style: :chunks)          # shallow tree with noun chunks
+doc.syntax_tree(morphology: true)        # attach morphology tables to the leaves
+```
+
+Two styles are available: `:projection` (default; a phrase-structure-like tree projected from the head words) and `:chunks` (a shallow tree with noun chunks). Named entities are highlighted with a colored background (`entities: false` to disable), and punctuation is omitted (`punctuation: true` to keep it). The `format:` option accepts `:bracket` (default), `:svg`, `:png`, `:pdf`, `:tikz`, and `:json`; any other keywords are passed through to rsyntaxtree (e.g. `fontsize: 12`).
+
+Note that the bracket notation is rsyntaxtree-flavored: it may contain rsyntaxtree-specific markup such as AVMs (`#(...#)`), region backgrounds (`%`), and in-word space joins (`<>`). A doc must contain a single sentence; for a multi-sentence doc, use `doc.sents.map { |s| s.syntax_tree }`.
+
+See `examples/rsyntaxtree/` for complete scripts.
 
 ### Named Entity Recognition
 

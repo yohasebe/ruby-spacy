@@ -2,6 +2,7 @@
 
 require "test_helper"
 require "socket"
+require "cgi"
 
 NLP_SM = Spacy::Language.new("en_core_web_sm")
 # en_core_web_lg is large and may be absent (e.g. partial CI environments);
@@ -11,6 +12,16 @@ NLP_SM = Spacy::Language.new("en_core_web_sm")
 NLP_LG = if Spacy::PySpacy.util.is_package("en_core_web_lg")
            Spacy::Language.new("en_core_web_lg")
          end
+
+# rsyntaxtree is a soft dependency (in the :rendering bundler group, which CI
+# jobs without the pango/rsvg system libraries exclude). syntax_tree tests
+# are skipped when it or RSyntaxTree.escape (>= 2.4.0) is unavailable.
+RST_AVAILABLE = begin
+  require "rsyntaxtree"
+  RSyntaxTree.respond_to?(:escape)
+rescue LoadError
+  false
+end
 
 class SpacyTest < Minitest::Test
   def test_that_it_has_a_version_number
@@ -479,6 +490,122 @@ class SpacyTest < Minitest::Test
     matches.each do |m|
       assert_equal m[:label], NLP_SM.vocab_string_lookup(m[:match_id])
     end
+  end
+
+  # ============================
+  # Syntax trees (require rsyntaxtree >= 2.4.0)
+  # ============================
+  # The notation itself is not compared literally (spaCy model updates can
+  # change the parse); structure and SVG readback are verified instead.
+
+  def syntax_tree_svg_texts(svg)
+    svg.scan(%r{<text[^>]*>(.*?)</text>}m).flatten
+       .map { |s| CGI.unescapeHTML(s.gsub(%r{<[^>]+>}, "")).gsub("￭", " ").strip }
+  end
+
+  def test_syntax_tree_projection_bracket
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    doc = NLP_SM.read("The quick brown fox jumped over the lazy dog near the river.")
+    bracket = doc.syntax_tree
+    assert bracket.start_with?("[S ")
+    assert_includes bracket, "[%NP "
+    # a chunk narrower than its projection is wrapped in an inner NP (NP -> NP PP)
+    assert_includes bracket, "[NP [%NP "
+  end
+
+  def test_syntax_tree_chunks_bracket
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    bracket = NLP_SM.read("The quick brown fox jumped over the lazy dog.").syntax_tree(style: :chunks)
+    assert bracket.start_with?("[S ")
+    assert_includes bracket, "[%NP "
+    refute_includes bracket, "^" # no triangle notation
+  end
+
+  def test_syntax_tree_morphology_and_entities
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    assert_includes NLP_SM.read("Hello world.").syntax_tree(morphology: true), "#("
+    assert_includes NLP_SM.read("Barack Obama was the 44th president.").syntax_tree, "%@orange:"
+  end
+
+  def test_syntax_tree_svg_readback
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    doc = NLP_SM.read("The quick brown fox jumped over the lazy dog near the river.")
+    texts = syntax_tree_svg_texts(doc.syntax_tree(format: :svg))
+    doc.tokens.reject { |t| t.pos == "PUNCT" }.each do |token|
+      assert_includes texts, token.text
+    end
+  end
+
+  def test_syntax_tree_special_characters
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    doc = NLP_SM.read(%q{Tom's "well-known" C++11 code computed 2+2 at 5% [see #42] & more.})
+    texts = syntax_tree_svg_texts(doc.syntax_tree(format: :svg))
+    doc.tokens.reject { |t| t.pos == "PUNCT" }.each do |token|
+      assert_includes texts, token.text
+    end
+  end
+
+  def test_syntax_tree_span_second_sentence
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    bracket = NLP_SM.read("I like apples. You like oranges.").sents[1].syntax_tree
+    assert_includes bracket, "oranges"
+    refute_includes bracket, "apples"
+  end
+
+  def test_syntax_tree_span_must_be_complete_subtree
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    doc = NLP_SM.read("The quick brown fox jumped over the lazy dog.")
+    # "fox jumped over": the head of the span is "jumped", whose subtree
+    # extends outside the span, so drawing it would silently include
+    # tokens outside the span
+    err = assert_raises(ArgumentError) { doc.span(3..5).syntax_tree }
+    assert_match(/complete subtree/, err.message)
+  end
+
+  def test_syntax_tree_projection_single_token_entity
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    # a single-token chunk / named entity must keep its background and label
+    bracket = NLP_SM.read("Apple is in California.").syntax_tree
+    assert_includes bracket, "%@orange:"
+  end
+
+  def test_syntax_tree_multi_sentence_doc_raises
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    err = assert_raises(ArgumentError) { NLP_SM.read("I like apples. You like oranges.").syntax_tree }
+    assert_match(/sents\.map/, err.message)
+  end
+
+  def test_syntax_tree_without_parser_raises
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    doc = Spacy::Doc.new(Spacy::PySpacy.blank("en"), text: "Hello world")
+    err = assert_raises(ArgumentError) { doc.syntax_tree }
+    assert_match(/dependency parse/, err.message)
+  end
+
+  def test_syntax_tree_option_validation
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    doc = NLP_SM.read("Hello world.")
+    assert_raises(ArgumentError) { doc.syntax_tree(font_size: 12) } # unknown option
+    assert_raises(ArgumentError) { doc.syntax_tree(format: :svg, hyphen: "markup") } # hyphen is fixed
+    assert_raises(ArgumentError) { doc.syntax_tree(fontsize: 12) } # drawing options with :bracket
+  end
+
+  def test_syntax_tree_png_is_binary
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    png = NLP_SM.read("Hello world.").syntax_tree(format: :png)
+    assert_equal Encoding::BINARY, png.encoding
   end
 
   # ============================
