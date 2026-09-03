@@ -2,7 +2,7 @@
 
 Trees drawn by `Doc#syntax_tree` with the [rsyntaxtree](https://github.com/yohasebe/rsyntaxtree) gem. The scripts in `examples/rsyntaxtree/` generate every image here.
 
-Noun chunks are shaded grey; a chunk that is also a named entity is shaded orange and labeled with the entity type. The blue and green are rsyntaxtree's default palette, not marking of any kind. Phrase labels come from the head's POS tag, so they follow whatever annotation scheme the model uses. Both are explained in the [README](../README.md#syntax-trees).
+Noun chunks are shaded grey; a chunk that is also a named entity is shaded orange and labeled with the entity type. The blue and green are rsyntaxtree's default palette, not marking of any kind. Phrase labels are ruby-spacy's own, derived from the head's POS tag, so they follow whatever annotation scheme the model uses. Both are explained in the [README](../README.md#syntax-trees).
 
 ## English (`en_core_web_sm`)
 
@@ -22,17 +22,17 @@ With morphology (a shorter sentence — the tables are tall):
 
 Projection, with PERSON and GPE highlighted:
 
-<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ja_projection.png" alt="Japanese projection" width="614">
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ja_projection.png" alt="Japanese projection" width="664">
 
 Chunks style:
 
-<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ja_chunks.png" alt="Japanese chunks" width="742">
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ja_chunks.png" alt="Japanese chunks" width="752">
 
 ## Russian (`ru_core_news_sm`)
 
 No noun chunk iterator, so `style: :chunks` is unavailable.
 
-<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ru_projection.png" alt="Russian projection" width="513">
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ru_projection.png" alt="Russian projection" width="524">
 
 With morphology — Russian marks case, gender, animacy, aspect, and voice:
 

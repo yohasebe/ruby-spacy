@@ -328,7 +328,7 @@ Two styles are available: `:projection` (default; a phrase-structure-like tree p
 
 The notation is rsyntaxtree-flavored: it can contain AVMs (`#(...#)`), region backgrounds (`%`), and in-word space joins (`<>`). A doc must hold a single sentence; for a multi-sentence doc, use `doc.sents.map { |s| s.syntax_tree }`.
 
-**Annotation schemes differ between models.** spaCy's English models make the preposition the head of its phrase, so projection trees contain `PP` nodes. UD-style models (Japanese, Russian, Chinese, and most others) attach prepositions and particles to the noun instead, so no `PP` appears. Phrase labels come from the head's POS tag and follow whatever scheme the model uses.
+**Annotation schemes differ between models.** spaCy's English models make the preposition the head of its phrase, so projection trees contain `PP` nodes. UD-style models (Japanese, Russian, Chinese, and most others) attach prepositions and particles to the noun instead, so a case-marked phrase is labeled `NP` and no `PP` appears. The labels are ruby-spacy's own, derived from the head's POS tag — spaCy supplies only tags and dependencies.
 
 **Entity highlighting requires noun chunks.** An entity gets its colored background only where it coincides with a noun chunk. In languages whose models have no noun chunk iterator (Russian, Chinese, Korean, Polish, ...) `entities: true` highlights nothing and `style: :chunks` raises `ArgumentError`.
 

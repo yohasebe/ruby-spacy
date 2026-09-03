@@ -9,7 +9,7 @@ require "fileutils"
 # Requires the rsyntaxtree gem (>= 2.4.0): gem install rsyntaxtree
 
 nlp = Spacy::Language.new("ja_core_news_sm")
-doc = nlp.read("太郎は昨日、東京で花子に古い本を渡した。")
+doc = nlp.read("太郎は花子が書いた手紙を京都で読んだ。")
 
 puts doc.syntax_tree
 

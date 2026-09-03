@@ -694,7 +694,7 @@ class SpacyTest < Minitest::Test
     skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
     nlp = multilingual_nlp("ja") or skip "ja_core_news_sm not installed"
 
-    doc = nlp.read("太郎は昨日、東京で花子に古い本を渡した。")
+    doc = nlp.read("太郎は花子が書いた手紙を京都で読んだ。")
     # a named-entity chunk gets a two-line label: background color + label
     # (the \n is rsyntaxtree's label line break, a literal backslash-n here)
     assert_includes doc.syntax_tree, '%@orange:NP\nPERSON'
@@ -709,7 +709,7 @@ class SpacyTest < Minitest::Test
     skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
     nlp = multilingual_nlp("ru") or skip "ru_core_news_sm not installed"
 
-    doc = nlp.read("Старый профессор читал интересную книгу в библиотеке.")
+    doc = nlp.read("Старый профессор читал в библиотеке интересную книгу.")
     # ru_core_news_sm has no noun chunk iterator (spaCy E894)
     err = assert_raises(ArgumentError) { doc.syntax_tree(style: :chunks) }
     assert_match(/noun chunks are not available/, err.message)
