@@ -8,48 +8,48 @@ Noun chunks are shaded grey; a chunk that is also a named entity is shaded orang
 
 Projection, the default style:
 
-![English projection](https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_en_projection.png)
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_en_projection.png" alt="English projection" width="728">
 
 Chunks style:
 
-![English chunks](https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_en_chunks.png)
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_en_chunks.png" alt="English chunks" width="739">
 
 With morphology (a shorter sentence — the tables are tall):
 
-![English morphology](https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_en_morphology.png)
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_en_morphology.png" alt="English morphology" width="900">
 
 ## Japanese (`ja_core_news_sm`)
 
 Projection, with PERSON and GPE highlighted:
 
-![Japanese projection](https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ja_projection.png)
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ja_projection.png" alt="Japanese projection" width="614">
 
 Chunks style:
 
-![Japanese chunks](https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ja_chunks.png)
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ja_chunks.png" alt="Japanese chunks" width="742">
 
 ## Russian (`ru_core_news_sm`)
 
 No noun chunk iterator, so `style: :chunks` is unavailable.
 
-![Russian projection](https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ru_projection.png)
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ru_projection.png" alt="Russian projection" width="513">
 
 With morphology — Russian marks case, gender, animacy, aspect, and voice:
 
-![Russian morphology](https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ru_morphology.png)
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ru_morphology.png" alt="Russian morphology" width="900">
 
 ## German (`de_core_news_sm`)
 
-![German projection](https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_de_projection.png)
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_de_projection.png" alt="German projection" width="580">
 
 ## Chinese (`zh_core_web_sm`)
 
 No noun chunk iterator, so `style: :chunks` is unavailable.
 
-![Chinese projection](https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_zh_projection.png)
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_zh_projection.png" alt="Chinese projection" width="576">
 
 ## Arabic (right-to-left)
 
 spaCy ships no Arabic pipeline, so this tree was parsed with [Stanza](https://stanfordnlp.github.io/stanza/) via [spacy-stanza](https://github.com/explosion/spacy-stanza) and wrapped with `Spacy::Language.new(py_nlp:)`. Right-to-left languages are drawn mirrored automatically. This pipeline has no noun chunks, so nothing is shaded. See `examples/rsyntaxtree/syntax_tree_ar.rb`.
 
-![Arabic projection](https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ar_projection.png)
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ar_projection.png" alt="Arabic projection" width="384">
