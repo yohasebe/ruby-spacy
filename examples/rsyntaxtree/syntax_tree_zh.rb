@@ -8,14 +8,14 @@ require "fileutils"
 
 # Requires the rsyntaxtree gem (>= 2.4.0): gem install rsyntaxtree
 
-nlp = Spacy::Language.new("ja_core_news_sm")
-doc = nlp.read("太郎は昨日、東京で花子に古い本を渡した。")
+nlp = Spacy::Language.new("zh_core_web_sm")
+doc = nlp.read("老教授昨天在图书馆读了一本有趣的书。")
 
 puts doc.syntax_tree
 
+# zh_core_web_sm has no noun chunk iterator, so style: :chunks raises
+# ArgumentError for this language
 output_dir = File.join(File.dirname(__FILE__), "outputs")
 FileUtils.mkdir_p(output_dir)
-File.binwrite(File.join(output_dir, "tree_ja_projection.png"),
+File.binwrite(File.join(output_dir, "tree_zh_projection.png"),
               doc.syntax_tree(format: :png))
-File.binwrite(File.join(output_dir, "tree_ja_chunks.png"),
-              doc.syntax_tree(style: :chunks, format: :png))

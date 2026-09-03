@@ -8,14 +8,12 @@ require "fileutils"
 
 # Requires the rsyntaxtree gem (>= 2.4.0): gem install rsyntaxtree
 
-nlp = Spacy::Language.new("ja_core_news_sm")
-doc = nlp.read("太郎は昨日、東京で花子に古い本を渡した。")
+nlp = Spacy::Language.new("de_core_news_sm")
+doc = nlp.read("Der alte Professor las gestern ein interessantes Buch.")
 
 puts doc.syntax_tree
 
 output_dir = File.join(File.dirname(__FILE__), "outputs")
 FileUtils.mkdir_p(output_dir)
-File.binwrite(File.join(output_dir, "tree_ja_projection.png"),
+File.binwrite(File.join(output_dir, "tree_de_projection.png"),
               doc.syntax_tree(format: :png))
-File.binwrite(File.join(output_dir, "tree_ja_chunks.png"),
-              doc.syntax_tree(style: :chunks, format: :png))

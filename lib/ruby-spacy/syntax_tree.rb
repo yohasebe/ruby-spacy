@@ -18,7 +18,7 @@ module Spacy
       hyphen: "literal",
       polyline: "on",
       tidy: "medium",
-      leafstyle: "auto",
+      leafstyle: "nothing",
       color: "modern"
     }.freeze
 
@@ -46,10 +46,27 @@ module Spacy
                               entities: entities, punctuation: punctuation)
         return bracket if format == :bracket
 
+        # Right-to-left scripts are drawn mirrored (leaves run right to left)
+        # unless the caller says otherwise. The notation itself is unaffected
+        render_opts = { mirror: "on" }.merge(render_opts) if rtl?(source)
         render(bracket, format, render_opts)
       end
 
       private
+
+      # True when the source's language writes right-to-left. Asked from the
+      # pipeline itself (`Defaults.writing_system`) rather than a hardcoded
+      # language list, so external pipelines (spacy-stanza, spacy-udpipe) work
+      # too. Any failure (e.g. no `Defaults`) falls back to left-to-right;
+      # note this also swallows a genuine detection failure, so if an RTL
+      # tree ever renders unmirrored, this fallback is the first place to check
+      def rtl?(source)
+        py_nlp = source.is_a?(Spacy::Span) ? source.doc.py_nlp : source.py_nlp
+        direction = Spacy::Builtins.getattr(py_nlp.Defaults, "writing_system")["direction"]
+        direction.to_s == "rtl"
+      rescue StandardError
+        false
+      end
 
       def ensure_rsyntaxtree!
         return if @loaded
@@ -143,7 +160,10 @@ module Spacy
                   "use doc.sents.map { |s| s.syntax_tree } for a multi-sentence doc"
           end
           tokens = source.tokens
-          root = tokens.find { |t| t.dep == "ROOT" }
+          # The root is the token that is its own head. Comparing dep strings
+          # would tie this to an annotation scheme (spaCy's trained pipelines
+          # use "ROOT" while UD-style pipelines such as Stanza use "root")
+          root = tokens.find { |t| t.head.i == t.i }
           raise ArgumentError, "syntax_tree: no root token found (no dependency parse)" unless root
 
           [tokens, root, "S"]

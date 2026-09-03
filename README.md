@@ -78,6 +78,18 @@ Or install it yourself as:
 
 See [Examples](#examples) below.
 
+### Using an External Pipeline
+
+`Spacy::Language.new` normally loads an installed model by name. To use a language spaCy has no model for, or a pipeline you built yourself, pass an existing Python `Language` object instead:
+
+```ruby
+py_nlp = PyCall.import_module("spacy_stanza").load_pipeline("ar")
+nlp = Spacy::Language.new(py_nlp: py_nlp)
+nlp.read("...").tokens # works like any other nlp
+```
+
+Third-party packages such as [spacy-stanza](https://github.com/explosion/spacy-stanza) or [spacy-udpipe](https://github.com/TakeLab/spacy-udpipe) are not ruby-spacy dependencies; install them yourself. `model` and `py_nlp:` are mutually exclusive.
+
 ## Examples
 
 Many of the following examples are Python-to-Ruby translations of code snippets in [spaCy 101](https://spacy.io/usage/spacy-101). For more examples, look inside the `examples` directory.
@@ -291,7 +303,7 @@ Output:
 
 → [rsyntaxtree](https://github.com/yohasebe/rsyntaxtree)
 
-`Doc#syntax_tree` (and `Span#syntax_tree`) converts the parse into [rsyntaxtree](https://github.com/yohasebe/rsyntaxtree) bracket notation and can render it as an image. rsyntaxtree (>= 2.4.0) is an optional dependency: install it with `gem install rsyntaxtree`.
+`Doc#syntax_tree` (and `Span#syntax_tree`) converts the parse into rsyntaxtree bracket notation and can render it as an image. rsyntaxtree (>= 2.4.0) is an optional dependency: `gem install rsyntaxtree`.
 
 ```ruby
 require "ruby-spacy"
@@ -305,11 +317,23 @@ doc.syntax_tree(style: :chunks)          # shallow tree with noun chunks
 doc.syntax_tree(morphology: true)        # attach morphology tables to the leaves
 ```
 
-Two styles are available: `:projection` (default; a phrase-structure-like tree projected from the head words) and `:chunks` (a shallow tree with noun chunks). Named entities are highlighted with a colored background (`entities: false` to disable), and punctuation is omitted (`punctuation: true` to keep it). The `format:` option accepts `:bracket` (default), `:svg`, `:png`, `:pdf`, `:tikz`, and `:json`; any other keywords are passed through to rsyntaxtree (e.g. `fontsize: 12`).
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_en_projection.png" alt="English projection tree" width="560">
 
-Note that the bracket notation is rsyntaxtree-flavored: it may contain rsyntaxtree-specific markup such as AVMs (`#(...#)`), region backgrounds (`%`), and in-word space joins (`<>`). A doc must contain a single sentence; for a multi-sentence doc, use `doc.sents.map { |s| s.syntax_tree }`.
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_en_morphology.png" alt="English projection tree with morphology tables" width="760">
 
-See `examples/rsyntaxtree/` for complete scripts.
+<img src="https://github.com/yohasebe/ruby-spacy/blob/main/examples/rsyntaxtree/outputs/tree_ja_projection.png" alt="Japanese projection tree with named entities" width="500">
+
+Two styles are available: `:projection` (default; a phrase-structure-like tree projected from the head words) and `:chunks` (a shallow tree with noun chunks). In both, noun chunks are shaded grey, and a chunk that is also a named entity is shaded orange and labeled with the entity type (`entities: false` to disable). The blue and green are rsyntaxtree's default palette, not marking of any kind; only the shading carries meaning. Punctuation is omitted (`punctuation: true` to keep it). The `format:` option accepts `:bracket` (default), `:svg`, `:png`, `:pdf`, `:tikz`, and `:json`; any other keywords are passed through to rsyntaxtree (e.g. `fontsize: 12`).
+
+The notation is rsyntaxtree-flavored: it can contain AVMs (`#(...#)`), region backgrounds (`%`), and in-word space joins (`<>`). A doc must hold a single sentence; for a multi-sentence doc, use `doc.sents.map { |s| s.syntax_tree }`.
+
+**Annotation schemes differ between models.** spaCy's English models make the preposition the head of its phrase, so projection trees contain `PP` nodes. UD-style models (Japanese, Russian, Chinese, and most others) attach prepositions and particles to the noun instead, so no `PP` appears. Phrase labels come from the head's POS tag and follow whatever scheme the model uses.
+
+**Entity highlighting requires noun chunks.** An entity gets its colored background only where it coincides with a noun chunk. In languages whose models have no noun chunk iterator (Russian, Chinese, Korean, Polish, ...) `entities: true` highlights nothing and `style: :chunks` raises `ArgumentError`.
+
+**Right-to-left languages.** spaCy ships no pipelines for Arabic, Hebrew, or other RTL languages, so one has to come from outside (see [Using an External Pipeline](#using-an-external-pipeline)). Their trees are drawn mirrored automatically; pass `mirror: "off"` to disable.
+
+See the [syntax tree gallery](docs/syntax_trees.md) for rendered trees in six languages, and `examples/rsyntaxtree/` for the scripts that generate them.
 
 ### Named Entity Recognition
 

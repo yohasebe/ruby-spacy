@@ -649,6 +649,12 @@ module Spacy
       end
     end
 
+    # Sentinel for "the caller gave no model argument". Distinct from nil so
+    # that an explicit nil (e.g. an unset ENV var passed straight through)
+    # still fails validation instead of silently loading the default model
+    NO_MODEL = Object.new.freeze
+    private_constant :NO_MODEL
+
     # Creates a language model instance, which is conventionally referred to by a variable named `nlp`.
     # @param model [String] A language model installed in the system
     # @param timeout [Numeric, nil] Seconds to wait for the model to load before
@@ -657,7 +663,31 @@ module Spacy
     #   because Ruby's `Timeout` cannot fire while PyCall holds the GVL. When it
     #   fires, the loading thread is left running as a daemon until the process
     #   exits (accepted: timeouts are an abnormal path).
-    def initialize(model = "en_core_web_sm", max_retrial: MAX_RETRIAL, timeout: 60)
+    # @param py_nlp [Object, nil] an existing Python `Language` pipeline to wrap
+    #   instead of loading a model. For languages spaCy ships no trained
+    #   pipeline for (e.g. Arabic and other right-to-left languages) or for
+    #   self-built pipelines, create one with a third-party package such as
+    #   spacy-stanza or spacy-udpipe and pass it here. Mutually exclusive with
+    #   `model`; model name validation, timeout, and retries are skipped
+    # @example Load an installed spaCy model
+    #   nlp = Spacy::Language.new("en_core_web_sm")
+    # @example Wrap an external pipeline (requires: pip install spacy-stanza)
+    #   py_nlp = PyCall.import_module("spacy_stanza").load_pipeline("ar")
+    #   nlp = Spacy::Language.new(py_nlp: py_nlp)
+    def initialize(model = NO_MODEL, max_retrial: MAX_RETRIAL, timeout: 60, py_nlp: nil)
+      if py_nlp
+        raise ArgumentError, "model and py_nlp: are mutually exclusive" unless model.equal?(NO_MODEL)
+        unless Builtins.isinstance(py_nlp, PyLanguage)
+          raise ArgumentError,
+                "py_nlp: must be a spaCy Language pipeline " \
+                "(e.g. from spacy.load or spacy_stanza.load_pipeline)"
+        end
+
+        @py_nlp = py_nlp
+        return
+      end
+
+      model = "en_core_web_sm" if model.equal?(NO_MODEL)
       unless model.to_s.match?(/\A[a-zA-Z0-9_\-\.\/]+\z/)
         raise ArgumentError, "Invalid model name: #{model.inspect}"
       end

@@ -23,6 +23,16 @@ rescue LoadError
   false
 end
 
+# Language models for the syntax_tree multilingual tests. Installed only on
+# representative CI jobs; each test is skipped when its model is absent (same
+# convention as NLP_LG)
+MULTILINGUAL_MODELS = {
+  "ja" => "ja_core_news_sm",
+  "ru" => "ru_core_news_sm",
+  "de" => "de_core_news_sm",
+  "zh" => "zh_core_web_sm"
+}.freeze
+
 class SpacyTest < Minitest::Test
   def test_that_it_has_a_version_number
     refute_nil ::Spacy::VERSION
@@ -244,6 +254,33 @@ class SpacyTest < Minitest::Test
     nlp = Spacy::Language.new
     king = nlp.get_lexeme("king")
     assert_equal king.text, "king"
+  end
+
+  def test_language_py_nlp_wraps_pipeline
+    nlp = Spacy::Language.new(py_nlp: Spacy::PySpacy.load("en_core_web_sm"))
+    doc = nlp.read("Hello world.")
+    assert_equal %w[Hello world .], doc.tokens.map(&:text)
+    assert_instance_of Spacy::Matcher, nlp.matcher
+    assert_equal ["Hello world."], nlp.pipe(["Hello world."]).map(&:text)
+    assert_equal "king", nlp.vocab("king").text
+    assert nlp.read("The dog barked.").syntax_tree.start_with?("[S ") if RST_AVAILABLE
+  end
+
+  def test_language_py_nlp_and_model_are_exclusive
+    assert_raises(ArgumentError) do
+      Spacy::Language.new("en_core_web_sm", py_nlp: Spacy::PySpacy.load("en_core_web_sm"))
+    end
+  end
+
+  def test_language_py_nlp_must_be_spacy_language
+    assert_raises(ArgumentError) { Spacy::Language.new(py_nlp: "not a pipeline") }
+  end
+
+  def test_language_nil_model_is_rejected
+    # An explicit nil (e.g. an unset ENV var passed straight through) must
+    # fail validation, not silently load the default model
+    err = assert_raises(ArgumentError) { Spacy::Language.new(nil) }
+    assert_match(/Invalid model name/, err.message)
   end
 
   def test_language_most_similar
@@ -503,6 +540,47 @@ class SpacyTest < Minitest::Test
        .map { |s| CGI.unescapeHTML(s.gsub(%r{<[^>]+>}, "")).gsub("￭", " ").strip }
   end
 
+  # The given leaf words in left-to-right SVG x order (mirror verification)
+  def syntax_tree_svg_leaves_by_x(svg, words)
+    svg.scan(%r{<text[^>]*?x='([\d.]+)'[^>]*>(.*?)</text>}m)
+       .map { |x, t| [x.to_f, CGI.unescapeHTML(t.gsub(%r{<[^>]+>}, "")).gsub("￭", " ").strip] }
+       .select { |_, t| words.include?(t) }
+       .sort_by(&:first)
+       .map(&:last)
+  end
+
+  # The lazily-loaded, memoized nlp for a MULTILINGUAL_MODELS language, or
+  # nil when the model is not installed
+  def multilingual_nlp(lang)
+    @multilingual_nlps ||= {}
+    return @multilingual_nlps[lang] if @multilingual_nlps.key?(lang)
+
+    model = MULTILINGUAL_MODELS.fetch(lang)
+    @multilingual_nlps[lang] = Spacy::Language.new(model) if Spacy::PySpacy.util.is_package(model)
+    @multilingual_nlps[lang]
+  end
+
+  # An Arabic [nlp, doc] pair built by hand (no third-party pipeline needed):
+  # spaCy lets you construct a Doc with explicit dependency annotations. The
+  # UD-style lowercase "root" dep (the Stanza/UDPipe convention) doubles as
+  # the regression test for root detection by self-head instead of
+  # dep == "ROOT". Scratch variables go to the ruby_spacy_helpers namespace
+  # so __main__ stays clean
+  def arabic_doc
+    PyCall.exec(<<~PY, globals: Spacy::PyHelpers.__dict__)
+      import spacy
+      from spacy.tokens import Doc as PyDocClass
+      _nlp_ar = spacy.blank("ar")
+      _doc_ar = PyDocClass(_nlp_ar.vocab,
+                           words=["الكلب", "الكبير", "يجري"],
+                           heads=[2, 0, 2], deps=["nsubj", "amod", "root"],
+                           pos=["NOUN", "ADJ", "VERB"])
+    PY
+    nlp = Spacy::Language.new(py_nlp: Spacy::Builtins.getattr(Spacy::PyHelpers, "_nlp_ar"))
+    doc = Spacy::Doc.new(nlp.py_nlp, py_doc: Spacy::Builtins.getattr(Spacy::PyHelpers, "_doc_ar"))
+    [nlp, doc]
+  end
+
   def test_syntax_tree_projection_bracket
     skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
 
@@ -512,6 +590,8 @@ class SpacyTest < Minitest::Test
     assert_includes bracket, "[%NP "
     # a chunk narrower than its projection is wrapped in an inner NP (NP -> NP PP)
     assert_includes bracket, "[NP [%NP "
+    # spaCy's English models make the preposition the head, so a PP appears
+    assert_includes bracket, "[PP "
   end
 
   def test_syntax_tree_chunks_bracket
@@ -606,6 +686,93 @@ class SpacyTest < Minitest::Test
 
     png = NLP_SM.read("Hello world.").syntax_tree(format: :png)
     assert_equal Encoding::BINARY, png.encoding
+  end
+
+  # --- Multilingual: each language exercises a different path -------------
+
+  def test_syntax_tree_japanese_entities_and_svg
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+    nlp = multilingual_nlp("ja") or skip "ja_core_news_sm not installed"
+
+    doc = nlp.read("太郎は昨日、東京で花子に古い本を渡した。")
+    # a named-entity chunk gets a two-line label: background color + label
+    # (the \n is rsyntaxtree's label line break, a literal backslash-n here)
+    assert_includes doc.syntax_tree, '%@orange:NP\nPERSON'
+    # tokens without spaces must survive the round trip to SVG and back
+    texts = syntax_tree_svg_texts(doc.syntax_tree(format: :svg))
+    doc.tokens.reject { |t| t.pos == "PUNCT" }.each do |token|
+      assert_includes texts, token.text
+    end
+  end
+
+  def test_syntax_tree_russian_without_noun_chunks
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+    nlp = multilingual_nlp("ru") or skip "ru_core_news_sm not installed"
+
+    doc = nlp.read("Старый профессор читал интересную книгу в библиотеке.")
+    # ru_core_news_sm has no noun chunk iterator (spaCy E894)
+    err = assert_raises(ArgumentError) { doc.syntax_tree(style: :chunks) }
+    assert_match(/noun chunks are not available/, err.message)
+    # projection works, without chunk backgrounds
+    bracket = doc.syntax_tree
+    assert bracket.start_with?("[S ")
+    refute_includes bracket, "%"
+    # Cyrillic leaves survive the round trip to SVG and back
+    texts = syntax_tree_svg_texts(doc.syntax_tree(format: :svg))
+    doc.tokens.reject { |t| t.pos == "PUNCT" }.each do |token|
+      assert_includes texts, token.text
+    end
+  end
+
+  def test_syntax_tree_german_chunk_backgrounds
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+    nlp = multilingual_nlp("de") or skip "de_core_news_sm not installed"
+
+    bracket = nlp.read("Der alte Professor las gestern ein interessantes Buch.").syntax_tree
+    # chunk backgrounds are not English-specific
+    assert_includes bracket, "[%NP "
+  end
+
+  def test_syntax_tree_chinese_entities_without_chunks
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+    nlp = multilingual_nlp("zh") or skip "zh_core_web_sm not installed"
+
+    doc = nlp.read("老教授昨天在图书馆读了一本有趣的书。")
+    assert_raises(ArgumentError) { doc.syntax_tree(style: :chunks) }
+    # the model tags named entities, but with no noun chunks there is nothing
+    # for a background to attach to
+    refute_empty doc.ents
+    refute_includes doc.syntax_tree, "%"
+  end
+
+  # --- Right-to-left languages --------------------------------------------
+
+  def test_syntax_tree_lowercase_root_dep
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    _nlp, doc = arabic_doc
+    # UD-style pipelines (Stanza/UDPipe) use a lowercase "root" dep; the
+    # hand-built doc carries one. The notation follows word order regardless
+    assert_equal "[S [NP [NOUN الكلب] [ADJ الكبير]] [VERB يجري]]", doc.syntax_tree
+  end
+
+  def test_syntax_tree_rtl_mirrored_by_default
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    words = %w[الكلب الكبير يجري]
+    _nlp, doc = arabic_doc
+    # RTL languages are drawn mirrored (leaves run right to left)...
+    assert_equal words.reverse, syntax_tree_svg_leaves_by_x(doc.syntax_tree(format: :svg), words)
+    # ...unless the caller overrides it
+    assert_equal words, syntax_tree_svg_leaves_by_x(doc.syntax_tree(format: :svg, mirror: "off"), words)
+  end
+
+  def test_syntax_tree_ltr_not_mirrored
+    skip "rsyntaxtree >= 2.4.0 not available" unless RST_AVAILABLE
+
+    words = %w[Hello world]
+    svg = NLP_SM.read("Hello world.").syntax_tree(format: :svg)
+    assert_equal words, syntax_tree_svg_leaves_by_x(svg, words)
   end
 
   # ============================
