@@ -23,3 +23,9 @@ task :normalize_permissions do
 end
 
 Rake::Task["build"].enhance([:normalize_permissions])
+
+# Inspect the built gem before it can be pushed: its payload must match
+# spec.files in both directions, and must carry no secrets, machine-local
+# paths, or owner-only modes. `release` depends on `build`, so this is the
+# last thing that runs before a push.
+Rake::Task["build"].enhance { sh "ruby", "scripts/verify_gem.rb" }
